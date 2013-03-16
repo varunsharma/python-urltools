@@ -33,11 +33,11 @@ def _get_public_suffix_list():
         psl_raw = open(os.environ['PUBLIC_SUFFIX_LIST']).readlines()
     else:
         psl_raw = urllib.urlopen(PSL_URL).readlines()
-    psl = {}
+    psl = set()
     for line in psl_raw:
-        line = line.strip()
-        if line != '' and not line.startswith('//'):
-            psl[line] = 1
+        item = line.strip()
+        if item != '' and not item.startswith('//'):
+            psl.add(item)
     return psl
 
 PSL = _get_public_suffix_list()
@@ -78,10 +78,10 @@ def parse(url):
     for i in range(len(d)):
         tld = '.'.join(d[i:])
         wildcard_tld = "*." + tld
-        if PSL.get(tld):
+        if tld in PSL:
             domain = '.'.join(d[:i])
             break
-        if PSL.get(wildcard_tld):
+        if wildcard_tld in PSL:
             domain = '.'.join(d[:i-1])
             tld = '.'.join(d[i-1:])
             break

@@ -49,5 +49,5 @@ def test_parse():
 #@pytest.mark.skipif("True")
 def test_get_public_suffix_list():
     psl = _get_public_suffix_list()
-    assert psl.get("de") != None
+    assert "de" in psl
     assert len(psl) > 6000

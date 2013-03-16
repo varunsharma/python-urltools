@@ -1,4 +1,6 @@
-from urltools import normalize
+import pytest
+
+from urltools import normalize, get_public_suffix_list
 
 
 def test_normalize():
@@ -27,3 +29,10 @@ def test_normalize():
     assert normalize("http://example.com/#abc") == "http://example.com/#abc"
     assert normalize("http://example.com/a/b/c#abc") == "http://example.com/a/b/c#abc"
     assert normalize("http://example.com/a/b/c?x=1#abc") == "http://example.com/a/b/c?x=1#abc"
+
+
+@pytest.mark.skipif("True")
+def test_get_public_suffix_list():
+    psl = get_public_suffix_list()
+    assert psl.get("de") != None
+    assert len(psl) > 6000

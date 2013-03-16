@@ -20,6 +20,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 import re
+import urllib
 from urlparse import urlparse
 
 
@@ -49,3 +50,15 @@ def normalize(url):
 
 def split(url):
     pass
+
+
+def get_public_suffix_list():
+    psl_url = "http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1"
+    psl_raw = urllib.urlopen(psl_url).readlines()
+    psl = {}
+    for line in psl_raw:
+        line = line.strip()
+        if line != '' and not line.startswith('//'):
+            psl[line] = 1
+    print len(psl)
+    return psl

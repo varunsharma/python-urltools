@@ -46,23 +46,17 @@ PSL = _get_public_suffix_list()
 PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
 
 
-ResultSet = namedtuple("ResultSet", "scheme domain tld port path query frament")
+ResultSet = namedtuple("ResultSet", "scheme domain tld port path query fragment")
 
 
 def normalize(url):
-    parts = urlparse(url)
+    parts = parse(url)
     nurl = parts.scheme + '://'
-    netloc = parts.netloc.rstrip('.').lower()
-    port = "80"
-    if PORT_RE.findall(netloc):
-        netloc, port = netloc.split(":")
-    nurl += netloc
-    if port != "80":
-        nurl += ":" + port
-    if parts.path:
-        nurl += parts.path
-    else:
-        nurl += '/'
+    nurl += parts.domain
+    nurl += "." + parts.tld
+    if parts.port != "80":
+        nurl += ":" + parts.port
+    nurl += parts.path
     if parts.query:
         nurl += "?" + parts.query
     if parts.fragment:

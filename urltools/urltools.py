@@ -19,12 +19,34 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
+import os
 import re
 import urllib
+from collections import namedtuple
 from urlparse import urlparse
 
 
+PSL_URL = "http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1"
+
+def _get_public_suffix_list():
+    if os.environ.get("PUBLIC_SUFFIX_LIST"):
+        psl_raw = open(os.environ['PUBLIC_SUFFIX_LIST']).readlines()
+    else:
+        psl_raw = urllib.urlopen(PSL_URL).readlines()
+    psl = {}
+    for line in psl_raw:
+        line = line.strip()
+        if line != '' and not line.startswith('//'):
+            psl[line] = 1
+    return psl
+
+PSL = _get_public_suffix_list()
+
+
 PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
+
+
+ResultSet = namedtuple("ResultSet", "scheme domain tld port path query frament")
 
 
 def normalize(url):
@@ -48,17 +70,26 @@ def normalize(url):
     return nurl
 
 
-def split(url):
-    pass
+def parse(url):
+    parts = urlparse(url)
+    netloc = parts.netloc.rstrip('.').lower()
+    port = "80"
+    if PORT_RE.findall(netloc):
+        netloc, port = netloc.split(":")
+    path = parts.path if parts.path else '/'
 
+    domain = netloc
+    tld = ''
+    d = netloc.split('.')
+    for i in range(len(d)):
+        tld = '.'.join(d[i:])
+        wildcard_tld = "*." + tld
+        if PSL.get(tld):
+            domain = '.'.join(d[:i])
+            break
+        if PSL.get(wildcard_tld):
+            domain = '.'.join(d[:i-1])
+            tld = '.'.join(d[i-1:])
+            break
 
-def get_public_suffix_list():
-    psl_url = "http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1"
-    psl_raw = urllib.urlopen(psl_url).readlines()
-    psl = {}
-    for line in psl_raw:
-        line = line.strip()
-        if line != '' and not line.startswith('//'):
-            psl[line] = 1
-    print len(psl)
-    return psl
+    return ResultSet(parts.scheme, domain, tld, port, path, parts.query, parts.fragment)

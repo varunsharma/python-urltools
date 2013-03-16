@@ -1,6 +1,6 @@
 import pytest
 
-from urltools import normalize, get_public_suffix_list
+from urltools import normalize, parse, _get_public_suffix_list
 
 
 def test_normalize():
@@ -31,8 +31,23 @@ def test_normalize():
     assert normalize("http://example.com/a/b/c?x=1#abc") == "http://example.com/a/b/c?x=1#abc"
 
 
-@pytest.mark.skipif("True")
+def test_parse():
+    parts = parse("http://example.com")
+    assert parts.scheme == "http"
+    assert parts.domain == "example"
+    assert parts.tld == "com"
+
+    parts = parse("http://example.ac.at")
+    assert parts.domain == "example"
+    assert parts.tld == "ac.at"
+
+    parts = parse("http://example.co.uk")
+    assert parts.domain == "example"
+    assert parts.tld == "co.uk"
+
+
+#@pytest.mark.skipif("True")
 def test_get_public_suffix_list():
-    psl = get_public_suffix_list()
+    psl = _get_public_suffix_list()
     assert psl.get("de") != None
     assert len(psl) > 6000

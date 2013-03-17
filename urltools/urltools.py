@@ -23,6 +23,7 @@ import os
 import re
 import urllib
 from collections import namedtuple
+from posixpath import normpath
 from urlparse import urlparse
 
 
@@ -43,12 +44,6 @@ def _get_public_suffix_list():
 PSL = _get_public_suffix_list()
 
 
-PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
-
-
-ResultSet = namedtuple("ResultSet", "scheme domain tld port path query fragment")
-
-
 def normalize(url):
     parts = parse(url)
     nurl = parts.scheme + '://'
@@ -56,13 +51,16 @@ def normalize(url):
     nurl += "." + parts.tld
     if parts.port != "80":
         nurl += ":" + parts.port
-    nurl += parts.path
+    nurl += normpath(parts.path)
     if parts.query:
         nurl += "?" + parts.query
     if parts.fragment:
         nurl += "#" + parts.fragment
     return nurl
 
+
+PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
+ResultSet = namedtuple("ResultSet", "scheme domain tld port path query fragment")
 
 def parse(url):
     parts = urlparse(url)

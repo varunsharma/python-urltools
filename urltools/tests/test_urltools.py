@@ -30,6 +30,9 @@ def test_normalize():
     assert normalize("http://example.com/a/b/c#abc") == "http://example.com/a/b/c#abc"
     assert normalize("http://example.com/a/b/c?x=1#abc") == "http://example.com/a/b/c?x=1#abc"
 
+    assert normalize("http://example.com/a/./b/././c") == "http://example.com/a/b/c"
+    assert normalize("http://example.com/a/../b") == "http://example.com/b"
+
 
 def test_parse():
     parts = parse("http://example.com")

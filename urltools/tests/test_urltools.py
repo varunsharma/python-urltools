@@ -1,4 +1,4 @@
-import pytest
+#import pytest
 
 from urltools import normalize, parse, _get_public_suffix_list
 

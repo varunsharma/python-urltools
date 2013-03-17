@@ -27,11 +27,12 @@ from posixpath import normpath
 from urlparse import urlparse
 
 
-PSL_URL = "http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1"
+PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
 
 def _get_public_suffix_list():
-    if os.environ.get("PUBLIC_SUFFIX_LIST"):
-        psl_raw = open(os.environ['PUBLIC_SUFFIX_LIST']).readlines()
+    local_psl = os.environ.get('PUBLIC_SUFFIX_LIST')
+    if local_psl:
+        psl_raw = open(local_psl).readlines()
     else:
         psl_raw = urllib.urlopen(PSL_URL).readlines()
     psl = set()
@@ -49,25 +50,25 @@ def normalize(url):
     nurl = parts.scheme + '://'
     nurl += parts.domain
     nurl += "." + parts.tld
-    if parts.port != "80":
-        nurl += ":" + parts.port
+    if parts.port != '80':
+        nurl += ':' + parts.port
     nurl += normpath(parts.path)
     if parts.query:
-        nurl += "?" + parts.query
+        nurl += '?' + parts.query
     if parts.fragment:
-        nurl += "#" + parts.fragment
+        nurl += '#' + parts.fragment
     return nurl
 
 
 PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
-ResultSet = namedtuple("ResultSet", "scheme domain tld port path query fragment")
+Result = namedtuple('Result', 'scheme domain tld port path query fragment')
 
 def parse(url):
     parts = urlparse(url)
     netloc = parts.netloc.rstrip('.').lower()
-    port = "80"
+    port = '80'
     if PORT_RE.findall(netloc):
-        netloc, port = netloc.split(":")
+        netloc, port = netloc.split(':')
     path = parts.path if parts.path else '/'
 
     domain = netloc
@@ -75,7 +76,7 @@ def parse(url):
     d = netloc.split('.')
     for i in range(len(d)):
         tld = '.'.join(d[i:])
-        wildcard_tld = "*." + tld
+        wildcard_tld = '*.' + tld
         if tld in PSL:
             domain = '.'.join(d[:i])
             break
@@ -84,4 +85,4 @@ def parse(url):
             tld = '.'.join(d[i-1:])
             break
 
-    return ResultSet(parts.scheme, domain, tld, port, path, parts.query, parts.fragment)
+    return Result(parts.scheme, domain, tld, port, path, parts.query, parts.fragment)

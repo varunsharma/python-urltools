@@ -6,7 +6,7 @@ Some functions to parse and normalize URLs.
 
 ## Example
 
-Normalize URL
+Normalize URL:
 
     >>> urltools.normalize("Http://exAMPLE.com./foo")
     http://example.com/foo
@@ -14,7 +14,7 @@ Normalize URL
 
 ## Installation
 
-   pip install -e git://github.com/rbaier/urltools.git#egg=urltools
+    pip install -e git://github.com/rbaier/urltools.git#egg=urltools
 
 
 ## Public Suffix List

@@ -1,6 +1,7 @@
 #import pytest
 
-from urltools import normalize, parse, _get_public_suffix_list
+from urltools import normalize, parse
+from urltools.urltools import _clean_netloc, _get_public_suffix_list
 
 
 def test_normalize():
@@ -35,18 +36,19 @@ def test_normalize():
 
 
 def test_parse():
-    parts = parse("http://example.com")
-    assert parts.scheme == "http"
-    assert parts.domain == "example"
-    assert parts.tld == "com"
+    assert parse("http://example.com") == ('http', 'example', 'com', '80', '/', '', '')
+    assert parse("http://example.ac.at") == ('http', 'example', 'ac.at', '80', '/', '', '')
+    assert parse("http://example.co.uk") == ('http', 'example', 'co.uk', '80', '/', '', '')
 
-    parts = parse("http://example.ac.at")
-    assert parts.domain == "example"
-    assert parts.tld == "ac.at"
+    assert parse("example.com") == ('', 'example', 'com', '', '', '', '')
+    assert parse("example.com.") == ('', 'example', 'com', '', '', '', '')
+    assert parse("example.ac.at") == ('', 'example', 'ac.at', '', '', '', '')
+    assert parse("example.com/abc") == ('', 'example', 'com', '', '/abc', '', '')
 
-    parts = parse("http://example.co.uk")
-    assert parts.domain == "example"
-    assert parts.tld == "co.uk"
+
+def test_clean_netloc():
+    assert _clean_netloc("example.com.") == "example.com"
+    assert _clean_netloc("EXAMple.CoM") == "example.com"
 
 
 #@pytest.mark.skipif("True")

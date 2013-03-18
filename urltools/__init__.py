@@ -1,3 +1,3 @@
-from urltools import normalize, parse, _get_public_suffix_list
+from urltools import normalize, parse
 
 __version__ = "0.1"

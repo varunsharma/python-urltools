@@ -63,13 +63,26 @@ def normalize(url):
 PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
 Result = namedtuple('Result', 'scheme domain tld port path query fragment')
 
+def _clean_netloc(netloc):
+    return netloc.rstrip('.').lower()
+
 def parse(url):
     parts = urlparse(url)
-    netloc = parts.netloc.rstrip('.').lower()
-    port = '80'
+    if parts.scheme:
+        netloc = _clean_netloc(parts.netloc)
+        path = parts.path if parts.path else '/'
+        port = '80'
+    else:
+        if parts.path.find('/') > 0:
+            res = parts.path.split('/', 1)
+            netloc = _clean_netloc(res[0])
+            path = '/' + res[1]
+        else:
+            netloc = _clean_netloc(parts.path)
+            path = ''
+        port = ''
     if PORT_RE.findall(netloc):
         netloc, port = netloc.split(':')
-    path = parts.path if parts.path else '/'
 
     domain = netloc
     tld = ''

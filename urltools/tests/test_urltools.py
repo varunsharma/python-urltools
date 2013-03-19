@@ -35,6 +35,9 @@ def test_normalize():
     assert normalize("http://example.com/a/./b/././c") == "http://example.com/a/b/c"
     assert normalize("http://example.com/a/../b") == "http://example.com/b"
 
+    assert normalize("eXAmplE.com") == "example.com"
+    assert normalize("example.com/a/../b") == "example.com/b"
+
 
 def test_parse():
     assert parse("http://example.com") == ('http', 'example', 'com', '80', '/', '', '')

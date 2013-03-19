@@ -47,12 +47,12 @@ PSL = _get_public_suffix_list()
 
 def normalize(url):
     parts = parse(url)
-    nurl = parts.scheme + '://'
+    nurl = parts.scheme + '://' if parts.scheme else ''
     nurl += parts.domain
     nurl += "." + parts.tld
-    if parts.port != '80':
+    if parts.port and parts.port != '80':
         nurl += ':' + parts.port
-    nurl += normpath(parts.path)
+    nurl += normpath(parts.path) if parts.path else ''
     if parts.query:
         nurl += '?' + parts.query
     if parts.fragment:

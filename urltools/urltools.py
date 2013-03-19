@@ -64,7 +64,7 @@ PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
 Result = namedtuple('Result', 'scheme domain tld port path query fragment')
 
 def _clean_netloc(netloc):
-    return netloc.rstrip('.').lower()
+    return netloc.rstrip('.').decode('utf-8').lower().encode('utf-8')
 
 def parse(url):
     parts = urlparse(url)
@@ -90,10 +90,15 @@ def parse(url):
     for i in range(len(d)):
         tld = '.'.join(d[i:])
         wildcard_tld = '*.' + tld
+        exception_tld = '!' + tld
         if tld in PSL:
             domain = '.'.join(d[:i])
             break
         if wildcard_tld in PSL:
+            domain = '.'.join(d[:i-1])
+            tld = '.'.join(d[i-1:])
+            break
+        if exception_tld in PSL:
             domain = '.'.join(d[:i-1])
             tld = '.'.join(d[i-1:])
             break

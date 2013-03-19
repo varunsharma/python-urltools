@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #import pytest
 
 from urltools import normalize, parse
@@ -45,10 +46,21 @@ def test_parse():
     assert parse("example.ac.at") == ('', 'example', 'ac.at', '', '', '', '')
     assert parse("example.com/abc") == ('', 'example', 'com', '', '/abc', '', '')
 
+    assert parse("example.jp") == ('', 'example', 'jp', '', '', '', '')
+    assert parse("foo.kyoto.jp") == ('', 'foo', 'kyoto.jp', '', '', '', '')
+
+    assert parse("example.gs.aa.no") == ('', 'example', 'gs.aa.no', '', '', '', '')
+
+    assert parse("http://пример.рф") == ('http', 'пример', 'рф', '80', '/', '', '')
+    assert parse("例子.中国") == ('', '例子', '中国', '', '', '', '')
+    assert parse("http://إختبار.مصر/") == ('http', 'إختبار', 'مصر', '80', '/', '', '')
+    assert parse("உதாரணம்.இந்தியா") == ('', 'உதாரணம்', 'இந்தியா', '', '', '', '')
+
 
 def test_clean_netloc():
     assert _clean_netloc("example.com.") == "example.com"
     assert _clean_netloc("EXAMple.CoM") == "example.com"
+    assert _clean_netloc("ПриМЕр.Рф") == "пример.рф"
 
 
 #@pytest.mark.skipif("True")

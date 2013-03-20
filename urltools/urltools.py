@@ -46,7 +46,7 @@ PSL = _get_public_suffix_list()
 
 
 def normalize(url):
-    parts = parse(url)
+    parts = extract(url)
     nurl = parts.scheme + '://' if parts.scheme else ''
     nurl += parts.domain
     nurl += "." + parts.tld
@@ -66,26 +66,13 @@ Result = namedtuple('Result', 'scheme domain tld port path query fragment')
 def _clean_netloc(netloc):
     return netloc.rstrip('.').decode('utf-8').lower().encode('utf-8')
 
-def parse(url):
-    parts = urlparse(url)
-    if parts.scheme:
-        netloc = _clean_netloc(parts.netloc)
-        path = parts.path if parts.path else '/'
-        port = '80'
-    else:
-        if parts.path.find('/') > 0:
-            res = parts.path.split('/', 1)
-            netloc = _clean_netloc(res[0])
-            path = '/' + res[1]
-        else:
-            netloc = _clean_netloc(parts.path)
-            path = ''
-        port = ''
-    if PORT_RE.findall(netloc):
-        netloc, port = netloc.split(':')
-
+def _split_netloc(netloc):
+    netloc = _clean_netloc(netloc)
     domain = netloc
     tld = ''
+    port = ''
+    if PORT_RE.findall(netloc):
+        netloc, port = netloc.split(':')
     d = netloc.split('.')
     for i in range(len(d)):
         tld = '.'.join(d[i:])
@@ -102,5 +89,29 @@ def parse(url):
             domain = '.'.join(d[:i-1])
             tld = '.'.join(d[i-1:])
             break
+    return domain, tld, port
 
+def parse(url):
+    parts = urlparse(url)
+    if parts.scheme:
+        netloc = parts.netloc
+        (domain, tld, port) = _split_netloc(netloc)
+    else:
+        domain = tld = port = ''
+    path = parts.path if parts.path else '/'
+    return Result(parts.scheme, domain, tld, port, path, parts.query, parts.fragment)
+
+def extract(url):
+    parts = urlparse(url)
+    if parts.scheme:
+        netloc = parts.netloc
+        path = parts.path if parts.path else '/'
+    else:
+        netloc = parts.path
+        path = ''
+        if netloc.find('/') > 0:
+            res = netloc.split('/', 1)
+            netloc = res[0]
+            path = '/' + res[1]
+    (domain, tld, port) = _split_netloc(netloc)
     return Result(parts.scheme, domain, tld, port, path, parts.query, parts.fragment)

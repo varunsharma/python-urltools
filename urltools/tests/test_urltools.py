@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 #import pytest
 
-from urltools import normalize, parse
-from urltools.urltools import _clean_netloc, _get_public_suffix_list
+from urltools import normalize, parse, extract
+from urltools.urltools import _clean_netloc, _split_netloc
+from urltools.urltools import _get_public_suffix_list
 
 
 def test_normalize():
@@ -40,30 +41,50 @@ def test_normalize():
 
 
 def test_parse():
-    assert parse("http://example.com") == ('http', 'example', 'com', '80', '/', '', '')
-    assert parse("http://example.ac.at") == ('http', 'example', 'ac.at', '80', '/', '', '')
-    assert parse("http://example.co.uk") == ('http', 'example', 'co.uk', '80', '/', '', '')
+    assert parse("http://example.com") == ('http', 'example', 'com', '', '/', '', '')
+    assert parse("http://example.com:8080") == ('http', 'example', 'com', '8080', '/', '', '')
+    assert parse("http://example.ac.at") == ('http', 'example', 'ac.at', '', '/', '', '')
+    assert parse("http://example.co.uk") == ('http', 'example', 'co.uk', '', '/', '', '')
 
-    assert parse("example.com") == ('', 'example', 'com', '', '', '', '')
-    assert parse("example.com.") == ('', 'example', 'com', '', '', '', '')
-    assert parse("example.ac.at") == ('', 'example', 'ac.at', '', '', '', '')
-    assert parse("example.com/abc") == ('', 'example', 'com', '', '/abc', '', '')
+    assert parse("example.com.") == ('', '', '', '', 'example.com.', '', '')
+    assert parse("example.com/abc") == ('', '', '', '', 'example.com/abc', '', '')
 
-    assert parse("example.jp") == ('', 'example', 'jp', '', '', '', '')
-    assert parse("foo.kyoto.jp") == ('', 'foo', 'kyoto.jp', '', '', '', '')
+    assert parse("http://пример.рф") == ('http', 'пример', 'рф', '', '/', '', '')
+    assert parse("http://إختبار.مصر/") == ('http', 'إختبار', 'مصر', '', '/', '', '')
 
-    assert parse("example.gs.aa.no") == ('', 'example', 'gs.aa.no', '', '', '', '')
 
-    assert parse("http://пример.рф") == ('http', 'пример', 'рф', '80', '/', '', '')
-    assert parse("例子.中国") == ('', '例子', '中国', '', '', '', '')
-    assert parse("http://إختبار.مصر/") == ('http', 'إختبار', 'مصر', '80', '/', '', '')
-    assert parse("உதாரணம்.இந்தியா") == ('', 'உதாரணம்', 'இந்தியா', '', '', '', '')
+def test_extract():
+    assert extract("http://example.com") == ('http', 'example', 'com', '', '/', '', '')
+    assert extract("http://example.com:8080") == ('http', 'example', 'com', '8080', '/', '', '')
+    assert extract("http://example.ac.at") == ('http', 'example', 'ac.at', '', '/', '', '')
+    assert extract("http://example.co.uk") == ('http', 'example', 'co.uk', '', '/', '', '')
+
+    assert extract("example.com.") == ('', 'example', 'com', '', '', '', '')
+    assert extract("example.com/abc") == ('', 'example', 'com', '', '/abc', '', '')
+
+    assert extract("http://пример.рф") == ('http', 'пример', 'рф', '', '/', '', '')
+    assert extract("http://إختبار.مصر/") == ('http', 'إختبار', 'مصر', '', '/', '', '')
 
 
 def test_clean_netloc():
     assert _clean_netloc("example.com.") == "example.com"
     assert _clean_netloc("EXAMple.CoM") == "example.com"
     assert _clean_netloc("ПриМЕр.Рф") == "пример.рф"
+
+
+def test_split_netloc():
+    assert _split_netloc("example.com") == ('example', 'com', '')
+    assert _split_netloc("example.ac.at") == ('example', 'ac.at', '')
+
+    assert _split_netloc("example.jp") == ('example', 'jp', '')
+    assert _split_netloc("foo.kyoto.jp") == ('foo', 'kyoto.jp', '')
+
+    assert _split_netloc("example.gs.aa.no") == ('example', 'gs.aa.no', '')
+
+    assert _split_netloc("例子.中国") == ('例子', '中国', '')
+    assert _split_netloc("உதாரணம்.இந்தியா") == ('உதாரணம்', 'இந்தியா','')
+
+    assert _split_netloc("example.com:8080") == ('example', 'com', '8080')
 
 
 #@pytest.mark.skipif("True")

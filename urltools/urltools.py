@@ -92,7 +92,6 @@ def _split_netloc(netloc):
             tld = '.'.join(d[i-1:])
             break
     if domain.find('.') > 0:
-        print domain
         (subdomain, domain) = domain.rsplit('.', 1) 
     return subdomain, domain, tld, port
 

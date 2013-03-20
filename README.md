@@ -6,7 +6,7 @@ Some functions to parse and normalize URLs.
 
 ## Functions
 
-### Normalize:
+### Normalize
 
     >>> urltools.normalize("Http://exAMPLE.com./foo")
     http://example.com/foo
@@ -14,7 +14,14 @@ Some functions to parse and normalize URLs.
 ### Parse
 
     >>> urltools.parse("http://example.co.uk/foo/bar?x=1#abc")
-    Result(scheme='http', domain='example', tld='co.uk', port='80', path='/foo/bar', query='x=1', fragment='abc')
+    Result(scheme='http', subdomain='www', domain='example', tld='co.uk', port='', path='/foo/bar', query='x=1', fragment='abc')
+    >>> urltools.parse("www.example.co.uk/abc")
+    Result(scheme='', subdomain='', domain='', tld='', port='', path='www.example.co.uk/abc', query='', fragment='')
+
+### Extract
+
+    >>> urltools.extract("www.example.co.uk/abc")
+    Result(scheme='', subdomain='www', domain='example', tld='co.uk', port='', path='/abc', query='', fragment='')
 
 
 ## Installation

@@ -3,7 +3,7 @@
 
 from urltools import normalize, parse, extract
 from urltools.urltools import _clean_netloc, _split_netloc
-from urltools.urltools import _get_public_suffix_list
+from urltools.urltools import _get_public_suffix_list, urlparse2
 
 
 def test_normalize():
@@ -68,6 +68,10 @@ def test_extract():
     assert extract("example.com.") == ('', '', 'example', 'com', '', '', '', '')
     assert extract("example.com/abc") == ('', '', 'example', 'com', '', '/abc', '', '')
     assert extract("www.example.com") == ('', 'www', 'example', 'com', '', '', '', '')
+    assert extract("example.com/") == ('', '', 'example', 'com', '', '/', '', '')
+    assert extract("example.com:8080") == ('', '', 'example', 'com', '8080', '', '', '')
+    #assert extract("example.com:8080/") == ('', '', 'example', 'com', '8080', '/', '', '')
+    #assert extract("example.com:8080/abc") == ('', '', 'example', 'com', '8080', '/abc', '', '')
 
     assert extract("http://пример.рф") == ('http', '', 'пример', 'рф', '', '/', '', '')
     assert extract("http://إختبار.مصر/") == ('http', '', 'إختبار', 'مصر', '', '/', '', '')
@@ -104,3 +108,10 @@ def test_get_public_suffix_list():
     psl = _get_public_suffix_list()
     assert "de" in psl
     assert len(psl) > 6000
+
+
+def test_urlparse2():
+    assert urlparse2("http://www.example.com") == ('http', 'www.example.com', '', '', '')
+    assert urlparse2("http://www.example.com/abc") == ('http', 'www.example.com', '/abc', '', '')
+    assert urlparse2("http://www.example.com/abc?x=1") == ('http', 'www.example.com', '/abc', 'x=1', '')
+    assert urlparse2("http://www.example.com/abc?x=1&y=2") == ('http', 'www.example.com', '/abc', 'x=1&y=2', '')

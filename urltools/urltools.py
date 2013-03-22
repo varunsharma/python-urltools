@@ -119,3 +119,35 @@ def extract(url):
             path = '/' + res[1]
     (subdomain, domain, tld, port) = _split_netloc(netloc)
     return Result(parts.scheme, subdomain, domain, tld, port, path, parts.query, parts.fragment)
+
+
+SCHEME_RE = re.compile(r'^[a-zA-Z]+:(//)?')
+
+def urlparse2(url):
+    schema = netloc = path = query = fragment = ''
+    if SCHEME_RE.findall(url):
+        l = url.find(':')
+        schema = url[:l]
+        rest = url[l:].lstrip(':/')
+    else:
+        rest = url
+    l_port = rest.find(':')
+    l_path = rest.find('/')
+    l_query = rest.find('?')
+    l_frag = rest.find('#')
+    if l_path > 0:
+        if l_port > 0 and l_port < l_path:
+            port = rest[l_port:l_path]
+            netloc = rest[:l_port]
+        else:
+            netloc = rest[:l_path]
+        path = rest[l_path:]
+    else:
+        netloc = rest
+    if l_query > 0:
+        path = path[:path.find('?')]
+        if l_frag > 0:
+            query = rest[l_query+1:l_frag]
+        else:
+            query = rest[l_query+1:]
+    return (schema, netloc, path, query, fragment)

@@ -1,0 +1,2 @@
+recursive-exclude urltools/tests *
+exclude MANIFEST.in

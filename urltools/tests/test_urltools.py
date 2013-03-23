@@ -71,8 +71,8 @@ def test_extract():
     assert extract("www.example.com") == ('', 'www', 'example', 'com', '', '', '', '')
     assert extract("example.com/") == ('', '', 'example', 'com', '', '/', '', '')
     assert extract("example.com:8080") == ('', '', 'example', 'com', '8080', '', '', '')
-    #assert extract("example.com:8080/") == ('', '', 'example', 'com', '8080', '/', '', '')
-    #assert extract("example.com:8080/abc") == ('', '', 'example', 'com', '8080', '/abc', '', '')
+    assert extract("example.com:8080/") == ('', '', 'example', 'com', '8080', '/', '', '')
+    assert extract("example.com:8080/abc") == ('', '', 'example', 'com', '8080', '/abc', '', '')
 
     assert extract("http://пример.рф") == ('http', '', 'пример', 'рф', '', '/', '', '')
     assert extract("http://إختبار.مصر/") == ('http', '', 'إختبار', 'مصر', '', '/', '', '')

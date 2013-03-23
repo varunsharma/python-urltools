@@ -14,6 +14,7 @@ def test_normalize():
     assert normalize("http://ExAMPLe.COM/") == "http://example.com/"
     assert normalize("http://example.com./") == "http://example.com/"
     assert normalize("http://example.com:80/") == "http://example.com/"
+    assert normalize("http://example.com:/") == "http://example.com/"
     assert normalize("http://example.com/#") == "http://example.com/"
 
     assert normalize("http://example.com:8080/") == "http://example.com:8080/"
@@ -79,6 +80,7 @@ def test_extract():
 
 def test_clean_netloc():
     assert _clean_netloc("example.com.") == "example.com"
+    assert _clean_netloc("example.com:") == "example.com"
     assert _clean_netloc("fOO.baR.example.com") == "foo.bar.example.com"
     assert _clean_netloc("EXAMple.CoM") == "example.com"
     assert _clean_netloc("ПриМЕр.Рф") == "пример.рф"
@@ -112,6 +114,23 @@ def test_get_public_suffix_list():
 
 def test_urlparse2():
     assert urlparse2("http://www.example.com") == ('http', 'www.example.com', '', '', '')
+    assert urlparse2("http://www.example.com/") == ('http', 'www.example.com', '/', '', '')
     assert urlparse2("http://www.example.com/abc") == ('http', 'www.example.com', '/abc', '', '')
+
+    assert urlparse2("http://www.example.com:80") == ('http', 'www.example.com:80', '', '', '')
+    assert urlparse2("http://www.example.com:8080") == ('http', 'www.example.com:8080', '', '', '')
+    assert urlparse2("http://www.example.com:8080/abc") == ('http', 'www.example.com:8080', '/abc', '', '')
+
+    assert urlparse2("http://www.example.com/?x=1") == ('http', 'www.example.com', '/', 'x=1', '')
     assert urlparse2("http://www.example.com/abc?x=1") == ('http', 'www.example.com', '/abc', 'x=1', '')
     assert urlparse2("http://www.example.com/abc?x=1&y=2") == ('http', 'www.example.com', '/abc', 'x=1&y=2', '')
+
+    assert urlparse2("http://www.example.com/abc#foo") == ('http', 'www.example.com', '/abc', '', 'foo')
+    assert urlparse2("http://www.example.com/abc?x=1&y=2#foo") == ('http', 'www.example.com', '/abc', 'x=1&y=2', 'foo')
+
+    assert urlparse2("mailto:foo@bar.com") == ('mailto', 'foo@bar.com', '', '', '')
+
+    assert urlparse2("www.example.com") == ('', '', 'www.example.com', '', '')
+    assert urlparse2("www.example.com/abc") == ('', '', 'www.example.com/abc', '', '')
+    assert urlparse2("www.example.com:8080") == ('', '', 'www.example.com:8080', '', '')
+    assert urlparse2("www.example.com:8080/abc") == ('', '', 'www.example.com:8080/abc', '', '')

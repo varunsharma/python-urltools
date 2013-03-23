@@ -65,7 +65,7 @@ PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
 Result = namedtuple('Result', 'scheme subdomain domain tld port path query fragment')
 
 def _clean_netloc(netloc):
-    return netloc.rstrip('.').decode('utf-8').lower().encode('utf-8')
+    return netloc.rstrip('.:').decode('utf-8').lower().encode('utf-8')
 
 def _split_netloc(netloc):
     netloc = _clean_netloc(netloc)
@@ -124,7 +124,7 @@ def extract(url):
 SCHEME_RE = re.compile(r'^[a-zA-Z]+:(//)?')
 
 def urlparse2(url):
-    schema = netloc = path = query = fragment = ''
+    schema = netloc = port = path = query = fragment = ''
     if SCHEME_RE.findall(url):
         l = url.find(':')
         schema = url[:l]
@@ -136,18 +136,30 @@ def urlparse2(url):
     l_query = rest.find('?')
     l_frag = rest.find('#')
     if l_path > 0:
-        if l_port > 0 and l_port < l_path:
-            port = rest[l_port:l_path]
-            netloc = rest[:l_port]
+#        if l_port > 0 and l_port < l_path:
+#            port = rest[l_port+1:l_path]
+#            netloc = rest[:l_port]
+#        else:
+        netloc = rest[:l_path]
+        if l_query > 0:
+            path = rest[l_path:l_query]
+        elif l_frag > 0:
+            path = rest[l_path:l_frag]
         else:
-            netloc = rest[:l_path]
-        path = rest[l_path:]
+            path = rest[l_path:]
     else:
         netloc = rest
     if l_query > 0:
-        path = path[:path.find('?')]
         if l_frag > 0:
             query = rest[l_query+1:l_frag]
         else:
             query = rest[l_query+1:]
+    if l_frag > 0:
+        fragment = rest[l_frag+1:]
+    if not schema:
+        tmp = path
+        path = netloc
+        #path += ':' + port if port else ''
+        path += tmp
+        netloc = ''
     return (schema, netloc, path, query, fragment)

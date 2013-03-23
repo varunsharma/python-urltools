@@ -24,7 +24,6 @@ import re
 import urllib
 from collections import namedtuple
 from posixpath import normpath
-from urlparse import urlparse
 
 
 PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
@@ -62,7 +61,44 @@ def normalize(url):
 
 
 PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
-Result = namedtuple('Result', 'scheme subdomain domain tld port path query fragment')
+SCHEME_RE = re.compile(r'^[a-zA-Z]+:(//)?')
+SplitResult = namedtuple('SplitResult', 'scheme netloc path query fragment')
+ParseResult = namedtuple('ParseResult', 'scheme subdomain domain tld port path query fragment')
+
+def split(url):
+    """Split URLs into scheme, netloc, path, query and fragment
+    """
+    scheme = netloc = path = query = fragment = ''
+    if SCHEME_RE.findall(url):
+        l = url.find(':')
+        scheme = url[:l].lower()
+        rest = url[l:].lstrip(':/')
+    else:
+        rest = url
+    l_path = rest.find('/')
+    l_query = rest.find('?')
+    l_frag = rest.find('#')
+    if l_path > 0:
+        netloc = rest[:l_path]
+        if l_query > 0:
+            path = rest[l_path:l_query]
+        elif l_frag > 0:
+            path = rest[l_path:l_frag]
+        else:
+            path = rest[l_path:]
+    else:
+        netloc = rest
+    if l_query > 0:
+        if l_frag > 0:
+            query = rest[l_query+1:l_frag]
+        else:
+            query = rest[l_query+1:]
+    if l_frag > 0:
+        fragment = rest[l_frag+1:]
+    if not scheme:
+        path = netloc + path
+        netloc = ''
+    return SplitResult(scheme, netloc, path, query, fragment)
 
 def _clean_netloc(netloc):
     return netloc.rstrip('.:').decode('utf-8').lower().encode('utf-8')
@@ -96,17 +132,17 @@ def _split_netloc(netloc):
     return subdomain, domain, tld, port
 
 def parse(url):
-    parts = urlparse(url)
+    parts = split(url)
     if parts.scheme:
         netloc = parts.netloc
         (subdomain, domain, tld, port) = _split_netloc(netloc)
     else:
         subdomain = domain = tld = port = ''
     path = parts.path if parts.path else '/'
-    return Result(parts.scheme, subdomain, domain, tld, port, path, parts.query, parts.fragment)
+    return ParseResult(parts.scheme, subdomain, domain, tld, port, path, parts.query, parts.fragment)
 
 def extract(url):
-    parts = urlparse(url)
+    parts = split(url)
     if parts.scheme:
         netloc = parts.netloc
         path = parts.path if parts.path else '/'
@@ -118,48 +154,4 @@ def extract(url):
             netloc = res[0]
             path = '/' + res[1]
     (subdomain, domain, tld, port) = _split_netloc(netloc)
-    return Result(parts.scheme, subdomain, domain, tld, port, path, parts.query, parts.fragment)
-
-
-SCHEME_RE = re.compile(r'^[a-zA-Z]+:(//)?')
-
-def urlparse2(url):
-    schema = netloc = port = path = query = fragment = ''
-    if SCHEME_RE.findall(url):
-        l = url.find(':')
-        schema = url[:l]
-        rest = url[l:].lstrip(':/')
-    else:
-        rest = url
-    l_port = rest.find(':')
-    l_path = rest.find('/')
-    l_query = rest.find('?')
-    l_frag = rest.find('#')
-    if l_path > 0:
-#        if l_port > 0 and l_port < l_path:
-#            port = rest[l_port+1:l_path]
-#            netloc = rest[:l_port]
-#        else:
-        netloc = rest[:l_path]
-        if l_query > 0:
-            path = rest[l_path:l_query]
-        elif l_frag > 0:
-            path = rest[l_path:l_frag]
-        else:
-            path = rest[l_path:]
-    else:
-        netloc = rest
-    if l_query > 0:
-        if l_frag > 0:
-            query = rest[l_query+1:l_frag]
-        else:
-            query = rest[l_query+1:]
-    if l_frag > 0:
-        fragment = rest[l_frag+1:]
-    if not schema:
-        tmp = path
-        path = netloc
-        #path += ':' + port if port else ''
-        path += tmp
-        netloc = ''
-    return (schema, netloc, path, query, fragment)
+    return ParseResult(parts.scheme, subdomain, domain, tld, port, path, parts.query, parts.fragment)

@@ -3,7 +3,7 @@
 
 from urltools import normalize, parse, extract
 from urltools.urltools import _clean_netloc, _split_netloc
-from urltools.urltools import _get_public_suffix_list, urlparse2
+from urltools.urltools import _get_public_suffix_list, split
 
 
 def test_normalize():
@@ -112,25 +112,30 @@ def test_get_public_suffix_list():
     assert len(psl) > 6000
 
 
-def test_urlparse2():
-    assert urlparse2("http://www.example.com") == ('http', 'www.example.com', '', '', '')
-    assert urlparse2("http://www.example.com/") == ('http', 'www.example.com', '/', '', '')
-    assert urlparse2("http://www.example.com/abc") == ('http', 'www.example.com', '/abc', '', '')
+def test_split():
+    assert split("http://www.example.com") == ('http', 'www.example.com', '', '', '')
+    assert split("http://www.example.com/") == ('http', 'www.example.com', '/', '', '')
+    assert split("http://www.example.com/abc") == ('http', 'www.example.com', '/abc', '', '')
 
-    assert urlparse2("http://www.example.com:80") == ('http', 'www.example.com:80', '', '', '')
-    assert urlparse2("http://www.example.com:8080") == ('http', 'www.example.com:8080', '', '', '')
-    assert urlparse2("http://www.example.com:8080/abc") == ('http', 'www.example.com:8080', '/abc', '', '')
+    assert split("http://www.example.com:80") == ('http', 'www.example.com:80', '', '', '')
+    assert split("http://www.example.com:8080") == ('http', 'www.example.com:8080', '', '', '')
+    assert split("http://www.example.com:8080/abc") == ('http', 'www.example.com:8080', '/abc', '', '')
 
-    assert urlparse2("http://www.example.com/?x=1") == ('http', 'www.example.com', '/', 'x=1', '')
-    assert urlparse2("http://www.example.com/abc?x=1") == ('http', 'www.example.com', '/abc', 'x=1', '')
-    assert urlparse2("http://www.example.com/abc?x=1&y=2") == ('http', 'www.example.com', '/abc', 'x=1&y=2', '')
+    assert split("http://www.example.com/?x=1") == ('http', 'www.example.com', '/', 'x=1', '')
+    assert split("http://www.example.com/abc?x=1") == ('http', 'www.example.com', '/abc', 'x=1', '')
+    assert split("http://www.example.com/abc?x=1&y=2") == ('http', 'www.example.com', '/abc', 'x=1&y=2', '')
 
-    assert urlparse2("http://www.example.com/abc#foo") == ('http', 'www.example.com', '/abc', '', 'foo')
-    assert urlparse2("http://www.example.com/abc?x=1&y=2#foo") == ('http', 'www.example.com', '/abc', 'x=1&y=2', 'foo')
+    assert split("http://www.example.com/abc#foo") == ('http', 'www.example.com', '/abc', '', 'foo')
+    assert split("http://www.example.com/abc?x=1&y=2#foo") == ('http', 'www.example.com', '/abc', 'x=1&y=2', 'foo')
 
-    assert urlparse2("mailto:foo@bar.com") == ('mailto', 'foo@bar.com', '', '', '')
+    assert split("mailto:foo@bar.com") == ('mailto', 'foo@bar.com', '', '', '')
 
-    assert urlparse2("www.example.com") == ('', '', 'www.example.com', '', '')
-    assert urlparse2("www.example.com/abc") == ('', '', 'www.example.com/abc', '', '')
-    assert urlparse2("www.example.com:8080") == ('', '', 'www.example.com:8080', '', '')
-    assert urlparse2("www.example.com:8080/abc") == ('', '', 'www.example.com:8080/abc', '', '')
+    assert split("example.com") == ('', '', 'example.com', '', '')
+    assert split("example.com.") == ('', '', 'example.com.', '', '')
+    assert split("www.example.com") == ('', '', 'www.example.com', '', '')
+    assert split("www.example.com/abc") == ('', '', 'www.example.com/abc', '', '')
+    assert split("www.example.com:8080") == ('', '', 'www.example.com:8080', '', '')
+    assert split("www.example.com:8080/abc") == ('', '', 'www.example.com:8080/abc', '', '')
+
+    assert split("foo/bar") == ('', '', 'foo/bar', '', '')
+    assert split("/foo/bar") == ('', '', '/foo/bar', '', '')

@@ -105,27 +105,28 @@ def _clean_netloc(netloc):
 
 def _split_netloc(netloc):
     netloc = _clean_netloc(netloc)
-    subdomain = ''
-    domain = netloc
-    tld = ''
-    port = ''
+    subdomain = tld = port = ''
+    if netloc.find('.') == -1:
+        return '', netloc, '', ''
     if PORT_RE.findall(netloc):
         domain, port = netloc.split(':')
-    d = domain.split('.')
-    for i in range(len(d)):
-        tld = '.'.join(d[i:])
+    else:
+        domain = netloc
+    parts = domain.split('.')
+    for i in range(len(parts)):
+        tld = '.'.join(parts[i:])
         wildcard_tld = '*.' + tld
         exception_tld = '!' + tld
         if tld in PSL:
-            domain = '.'.join(d[:i])
+            domain = '.'.join(parts[:i])
             break
         if wildcard_tld in PSL:
-            domain = '.'.join(d[:i-1])
-            tld = '.'.join(d[i-1:])
+            domain = '.'.join(parts[:i-1])
+            tld = '.'.join(parts[i-1:])
             break
         if exception_tld in PSL:
-            domain = '.'.join(d[:i-1])
-            tld = '.'.join(d[i-1:])
+            domain = '.'.join(parts[:i-1])
+            tld = '.'.join(parts[i-1:])
             break
     if domain.find('.') > 0:
         (subdomain, domain) = domain.rsplit('.', 1) 
@@ -150,8 +151,8 @@ def extract(url):
         netloc = parts.path
         path = ''
         if netloc.find('/') > 0:
-            res = netloc.split('/', 1)
-            netloc = res[0]
-            path = '/' + res[1]
+            tmp = netloc.split('/', 1)
+            netloc = tmp[0]
+            path = '/' + tmp[1]
     (subdomain, domain, tld, port) = _split_netloc(netloc)
     return ParseResult(parts.scheme, subdomain, domain, tld, port, path, parts.query, parts.fragment)

@@ -81,8 +81,8 @@ def test_extract():
 def test_clean_netloc():
     assert _clean_netloc("example.com.") == "example.com"
     assert _clean_netloc("example.com:") == "example.com"
-    assert _clean_netloc("fOO.baR.example.com") == "foo.bar.example.com"
     assert _clean_netloc("EXAMple.CoM") == "example.com"
+    assert _clean_netloc("fOO.baR.example.com") == "foo.bar.example.com"
     assert _clean_netloc("ПриМЕр.Рф") == "пример.рф"
 
 
@@ -103,6 +103,8 @@ def test_split_netloc():
 
     assert _split_netloc("www.example.com") == ('www', 'example', 'com', '')
     assert _split_netloc("foo.bar.example.com:8888") == ('foo.bar', 'example', 'com', '8888')
+
+    assert _split_netloc("example") == ('', 'example', '', '')
 
 
 #@pytest.mark.skipif("True")

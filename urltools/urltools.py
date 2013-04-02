@@ -44,15 +44,28 @@ def _get_public_suffix_list():
 PSL = _get_public_suffix_list()
 
 
+SCHEMES = ['http', 'https', 'ftp']
+
 def normalize(url):
     parts = extract(url)
-    nurl = parts.scheme + '://' if parts.scheme else ''
+    nurl = ''
+    if parts.scheme:
+        if parts.scheme in SCHEMES:
+            nurl += parts.scheme + '://'
+        else:
+            nurl += parts.scheme + ':'
+    if parts.username and parts.password:
+        nurl += parts.username + ':' + parts.password + '@'
     nurl += parts.subdomain + '.' if parts.subdomain else ''
     nurl += parts.domain
-    nurl += "." + parts.tld
+    nurl += '.' + parts.tld
     if parts.port and parts.port != '80':
         nurl += ':' + parts.port
-    nurl += normpath(parts.path) if parts.path else ''
+    if parts.path:
+        nurl += normpath(parts.path)
+    elif parts.scheme:
+        if parts.scheme in SCHEMES:
+            nurl += '/'
     if parts.query:
         nurl += '?' + parts.query
     if parts.fragment:
@@ -62,8 +75,9 @@ def normalize(url):
 
 PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
 SCHEME_RE = re.compile(r'^[a-zA-Z]+:(//)?')
+USER_RE = re.compile(r'^[^:@]*:[^:@]*@.*$')
 SplitResult = namedtuple('SplitResult', 'scheme netloc path query fragment')
-ParseResult = namedtuple('ParseResult', 'scheme subdomain domain tld port path query fragment')
+ParseResult = namedtuple('ParseResult', 'scheme username password subdomain domain tld port path query fragment')
 
 def split(url):
     """Split URLs into scheme, netloc, path, query and fragment
@@ -104,10 +118,13 @@ def _clean_netloc(netloc):
     return netloc.rstrip('.:').decode('utf-8').lower().encode('utf-8')
 
 def _split_netloc(netloc):
+    username = password = subdomain = tld = port = ''
+    if USER_RE.findall(netloc):
+        user_pw, netloc = netloc.split('@', 1)
+        username, password = user_pw.split(':', 1)
     netloc = _clean_netloc(netloc)
-    subdomain = tld = port = ''
     if netloc.find('.') == -1:
-        return '', netloc, '', ''
+        return '', '', '', netloc, '', ''
     if PORT_RE.findall(netloc):
         domain, port = netloc.split(':')
     else:
@@ -130,23 +147,24 @@ def _split_netloc(netloc):
             break
     if domain.find('.') > 0:
         (subdomain, domain) = domain.rsplit('.', 1) 
-    return subdomain, domain, tld, port
+    return username, password, subdomain, domain, tld, port
 
 def parse(url):
     parts = split(url)
     if parts.scheme:
         netloc = parts.netloc
-        (subdomain, domain, tld, port) = _split_netloc(netloc)
+        (username, password, subdomain, domain, tld, port) = _split_netloc(netloc)
     else:
-        subdomain = domain = tld = port = ''
-    path = parts.path if parts.path else '/'
-    return ParseResult(parts.scheme, subdomain, domain, tld, port, path, parts.query, parts.fragment)
+        username = password = subdomain = domain = tld = port = ''
+    path = parts.path if parts.path else ''
+    return ParseResult(parts.scheme, username, password, subdomain, domain, tld,
+                       port, path, parts.query, parts.fragment)
 
 def extract(url):
     parts = split(url)
     if parts.scheme:
         netloc = parts.netloc
-        path = parts.path if parts.path else '/'
+        path = parts.path if parts.path else ''
     else:
         netloc = parts.path
         path = ''
@@ -154,5 +172,6 @@ def extract(url):
             tmp = netloc.split('/', 1)
             netloc = tmp[0]
             path = '/' + tmp[1]
-    (subdomain, domain, tld, port) = _split_netloc(netloc)
-    return ParseResult(parts.scheme, subdomain, domain, tld, port, path, parts.query, parts.fragment)
+    (username, password, subdomain, domain, tld, port) = _split_netloc(netloc)
+    return ParseResult(parts.scheme, username, password, subdomain, domain, tld,
+                       port, path, parts.query, parts.fragment)

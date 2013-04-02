@@ -43,39 +43,45 @@ def test_normalize():
     assert normalize("http://www.example.com") == "http://www.example.com/"
     assert normalize("www.example.com") == "www.example.com"
 
+    assert normalize("http://foo:bar@example.com") == "http://foo:bar@example.com/"
+    assert normalize("http://Foo:BAR@exaMPLE.COM/") == "http://Foo:BAR@example.com/"
+
+    assert normalize("mailto:foo@example.com") == "mailto:foo@example.com"
+    assert normalize("mailto:foo@eXAMPle.cOM") == "mailto:foo@example.com"
+
 
 def test_parse():
-    assert parse("http://example.com") == ('http', '', 'example', 'com', '', '/', '', '')
-    assert parse("http://example.com:8080") == ('http', '', 'example', 'com', '8080', '/', '', '')
-    assert parse("http://example.ac.at") == ('http', '', 'example', 'ac.at', '', '/', '', '')
-    assert parse("http://example.co.uk") == ('http', '', 'example', 'co.uk', '', '/', '', '')
+    assert parse("http://example.com") == ('http', '', '', '', 'example', 'com', '', '', '', '')
+    assert parse("http://example.com:8080") == ('http', '', '', '', 'example', 'com', '8080', '', '', '')
+    assert parse("http://example.ac.at") == ('http', '', '', '', 'example', 'ac.at', '', '', '', '')
+    assert parse("http://example.co.uk") == ('http', '', '', '', 'example', 'co.uk', '', '', '', '')
 
-    assert parse("example.com.") == ('', '', '', '', '', 'example.com.', '', '')
-    assert parse("example.com/abc") == ('', '', '', '', '', 'example.com/abc', '', '')
-    assert parse("www.example.com") == ('', '', '', '', '', 'www.example.com', '', '')
+    assert parse("example.com.") == ('', '', '', '', '', '', '', 'example.com.', '', '')
+    assert parse("example.com/abc") == ('', '', '', '', '', '', '', 'example.com/abc', '', '')
+    assert parse("www.example.com") == ('', '', '', '', '', '', '', 'www.example.com', '', '')
 
-    assert parse("http://пример.рф") == ('http', '', 'пример', 'рф', '', '/', '', '')
-    assert parse("http://إختبار.مصر/") == ('http', '', 'إختبار', 'مصر', '', '/', '', '')
+    assert parse("http://пример.рф") == ('http', '', '', '', 'пример', 'рф', '', '', '', '')
+    assert parse("http://إختبار.مصر/") == ('http', '', '', '', 'إختبار', 'مصر', '', '/', '', '')
 
 
 def test_extract():
-    assert extract("http://example.com") == ('http', '', 'example', 'com', '', '/', '', '')
-    assert extract("http://example.com:8080") == ('http', '', 'example', 'com', '8080', '/', '', '')
-    assert extract("http://example.com:8080/abc?x=1&y=2#qwe") == ('http', '', 'example', 'com', '8080', '/abc', 'x=1&y=2', 'qwe')
-    assert extract("http://example.ac.at") == ('http', '', 'example', 'ac.at', '', '/', '', '')
-    assert extract("http://example.co.uk") == ('http', '', 'example', 'co.uk', '', '/', '', '')
-    assert extract("http://foo.bar.example.co.uk") == ('http', 'foo.bar', 'example', 'co.uk', '', '/', '', '')
+    assert extract("http://example.com") == ('http', '', '', '', 'example', 'com', '', '', '', '')
+    assert extract("http://example.com:8080") == ('http', '', '', '', 'example', 'com', '8080', '', '', '')
+    assert extract("http://example.com:8080/abc?x=1&y=2#qwe") == ('http', '', '', '', 'example', 'com', '8080', '/abc', 'x=1&y=2', 'qwe')
+    assert extract("http://example.ac.at") == ('http', '', '', '', 'example', 'ac.at', '', '', '', '')
+    assert extract("http://example.co.uk") == ('http', '', '', '', 'example', 'co.uk', '', '', '', '')
+    assert extract("http://foo.bar.example.co.uk") == ('http', '', '', 'foo.bar', 'example', 'co.uk', '', '', '', '')
 
-    assert extract("example.com.") == ('', '', 'example', 'com', '', '', '', '')
-    assert extract("example.com/abc") == ('', '', 'example', 'com', '', '/abc', '', '')
-    assert extract("www.example.com") == ('', 'www', 'example', 'com', '', '', '', '')
-    assert extract("example.com/") == ('', '', 'example', 'com', '', '/', '', '')
-    assert extract("example.com:8080") == ('', '', 'example', 'com', '8080', '', '', '')
-    assert extract("example.com:8080/") == ('', '', 'example', 'com', '8080', '/', '', '')
-    assert extract("example.com:8080/abc") == ('', '', 'example', 'com', '8080', '/abc', '', '')
+    assert extract("example.com.") == ('', '', '', '', 'example', 'com', '', '', '', '')
+    assert extract("example.com/abc") == ('', '', '', '', 'example', 'com', '', '/abc', '', '')
+    assert extract("www.example.com") == ('', '', '', 'www', 'example', 'com', '', '', '', '')
+    assert extract("example.com/") == ('', '', '', '', 'example', 'com', '', '/', '', '')
+    assert extract("example.com:8080") == ('', '', '', '', 'example', 'com', '8080', '', '', '')
+    assert extract("example.com:8080/") == ('', '', '', '', 'example', 'com', '8080', '/', '', '')
+    assert extract("example.com:8080/abc") == ('', '', '', '', 'example', 'com', '8080', '/abc', '', '')
 
-    assert extract("http://пример.рф") == ('http', '', 'пример', 'рф', '', '/', '', '')
-    assert extract("http://إختبار.مصر/") == ('http', '', 'إختبار', 'مصر', '', '/', '', '')
+    assert extract("http://пример.рф") == ('http', '', '', '', 'пример', 'рф', '', '', '', '')
+    assert extract("http://إختبار.مصر/") == ('http', '', '', '', 'إختبار', 'مصر', '', '/', '', '')
 
 
 def test_clean_netloc():
@@ -87,24 +93,24 @@ def test_clean_netloc():
 
 
 def test_split_netloc():
-    assert _split_netloc("example.com") == ('', 'example', 'com', '')
-    assert _split_netloc("example.ac.at") == ('', 'example', 'ac.at', '')
+    assert _split_netloc("example.com") == ('', '', '', 'example', 'com', '')
+    assert _split_netloc("example.ac.at") == ('', '', '', 'example', 'ac.at', '')
 
-    assert _split_netloc("example.jp") == ('', 'example', 'jp', '')
-    assert _split_netloc("foo.kyoto.jp") == ('', 'foo', 'kyoto.jp', '')
+    assert _split_netloc("example.jp") == ('', '', '', 'example', 'jp', '')
+    assert _split_netloc("foo.kyoto.jp") == ('', '', '', 'foo', 'kyoto.jp', '')
 
-    assert _split_netloc("example.gs.aa.no") == ('', 'example', 'gs.aa.no', '')
+    assert _split_netloc("example.gs.aa.no") == ('', '', '', 'example', 'gs.aa.no', '')
 
-    assert _split_netloc("例子.中国") == ('', '例子', '中国', '')
-    assert _split_netloc("உதாரணம்.இந்தியா") == ('', 'உதாரணம்', 'இந்தியா','')
+    assert _split_netloc("例子.中国") == ('', '', '', '例子', '中国', '')
+    assert _split_netloc("உதாரணம்.இந்தியா") == ('', '', '', 'உதாரணம்', 'இந்தியா','')
 
-    assert _split_netloc("example.com:80") == ('', 'example', 'com', '80')
-    assert _split_netloc("example.com:8080") == ('', 'example', 'com', '8080')
+    assert _split_netloc("example.com:80") == ('', '', '', 'example', 'com', '80')
+    assert _split_netloc("example.com:8080") == ('', '', '', 'example', 'com', '8080')
 
-    assert _split_netloc("www.example.com") == ('www', 'example', 'com', '')
-    assert _split_netloc("foo.bar.example.com:8888") == ('foo.bar', 'example', 'com', '8888')
+    assert _split_netloc("www.example.com") == ('', '', 'www', 'example', 'com', '')
+    assert _split_netloc("foo.bar.example.com:8888") == ('', '', 'foo.bar', 'example', 'com', '8888')
 
-    assert _split_netloc("example") == ('', 'example', '', '')
+    assert _split_netloc("example") == ('', '', '', 'example', '', '')
 
 
 #@pytest.mark.skipif("True")

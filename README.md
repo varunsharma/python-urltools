@@ -11,12 +11,21 @@ Some functions to parse and normalize URLs.
     >>> urltools.normalize("Http://exAMPLE.com./foo")
     http://example.com/foo
 
+
+### Encode
+
+IDNA encoding (see RFC 3490).
+
+    >>> urltools.encode("http://müller.de")
+    'http://xn--mller-kva.de/'
+
+
 ### Parse
 
     >>> urltools.parse("http://example.co.uk/foo/bar?x=1#abc")
-    ParseResult(scheme='http', subdomain='www', domain='example', tld='co.uk', port='', path='/foo/bar', query='x=1', fragment='abc')
+    ParseResult(scheme='http', username='', password='', subdomain='', domain='example', tld='co.uk', port='', path='/foo/bar', query='x=1', fragment='abc')
     >>> urltools.parse("www.example.co.uk/abc")
-    ParseResult(scheme='', subdomain='', domain='', tld='', port='', path='www.example.co.uk/abc', query='', fragment='')
+    ParseResult(scheme='', username='', password='', subdomain='', domain='', tld='', port='', path='www.example.co.uk/abc', query='', fragment='')
 
 ### Extract
 
@@ -24,7 +33,7 @@ The difference between `extract` and `parse` is that `parse` cares about relativ
 URLs and `extract` always tries to extract as much information as possible.
 
     >>> urltools.extract("www.example.co.uk/abc")
-    ParseResult(scheme='', subdomain='www', domain='example', tld='co.uk', port='', path='/abc', query='', fragment='')
+    ParseResult(scheme='', username='', password='', subdomain='www', domain='example', tld='co.uk', port='', path='/abc', query='', fragment='')
 
 
 ## Installation

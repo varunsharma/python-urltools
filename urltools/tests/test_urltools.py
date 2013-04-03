@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #import pytest
 
-from urltools import normalize, parse, extract
+from urltools import normalize, parse, extract, encode
 from urltools.urltools import _clean_netloc, _split_netloc
 from urltools.urltools import _get_public_suffix_list, split
 
@@ -50,6 +50,10 @@ def test_normalize():
     assert normalize("mailto:foo@eXAMPle.cOM") == "mailto:foo@example.com"
 
 
+def test_encode():
+    assert encode("http://exämple.com/") == "http://xn--exmple-cua.com/"
+
+
 def test_parse():
     assert parse("http://example.com") == ('http', '', '', '', 'example', 'com', '', '', '', '')
     assert parse("http://example.com:8080") == ('http', '', '', '', 'example', 'com', '8080', '', '', '')
@@ -62,6 +66,8 @@ def test_parse():
 
     assert parse("http://пример.рф") == ('http', '', '', '', 'пример', 'рф', '', '', '', '')
     assert parse("http://إختبار.مصر/") == ('http', '', '', '', 'إختبار', 'مصر', '', '/', '', '')
+
+    assert parse("mailto:foo@bar.com") == ('mailto', 'foo', '', '', 'bar', 'com', '', '', '', '')
 
 
 def test_extract():

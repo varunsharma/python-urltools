@@ -48,6 +48,15 @@ SCHEMES = ['http', 'https', 'ftp']
 
 def normalize(url):
     parts = extract(url)
+    return _assemble(parts)
+
+def encode(url):
+    parts = extract(url)
+    idna = lambda x: x.decode('utf-8').encode('idna')
+    encoded = ParseResult(*(idna(p) for p in parts))
+    return _assemble(encoded)
+
+def _assemble(parts):
     nurl = ''
     if parts.scheme:
         if parts.scheme in SCHEMES:
@@ -56,6 +65,8 @@ def normalize(url):
             nurl += parts.scheme + ':'
     if parts.username and parts.password:
         nurl += parts.username + ':' + parts.password + '@'
+    elif parts.username:
+        nurl += parts.username + '@'
     if parts.subdomain:
         nurl += parts.subdomain + '.'
     nurl += parts.domain
@@ -76,7 +87,7 @@ def normalize(url):
 
 PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
 SCHEME_RE = re.compile(r'^[a-zA-Z]+:(//)?')
-USER_RE = re.compile(r'^[^:@]*:[^:@]*@.*$')
+USER_RE = re.compile(r'^[^:@]*:?[^:@]+@.*$')
 SplitResult = namedtuple('SplitResult', ['scheme', 'netloc', 'path', 'query',
                                          'fragment'])
 ParseResult = namedtuple('ParseResult', ['scheme', 'username', 'password',
@@ -125,7 +136,10 @@ def _split_netloc(netloc):
     username = password = subdomain = tld = port = ''
     if USER_RE.search(netloc):
         user_pw, netloc = netloc.split('@', 1)
-        username, password = user_pw.split(':', 1)
+        if ':' in user_pw:
+            username, password = user_pw.split(':', 1)
+        else:
+            username = user_pw
     netloc = _clean_netloc(netloc)
     if '.' not in netloc:
         return '', '', '', netloc, '', ''

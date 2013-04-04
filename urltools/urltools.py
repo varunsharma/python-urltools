@@ -48,7 +48,7 @@ SCHEMES = ['http', 'https', 'ftp']
 
 def normalize(url):
     parts = extract(url)
-    return _assemble(parts)
+    return _assemble(parts, default_path='/')
 
 def encode(url):
     parts = extract(url)
@@ -56,7 +56,7 @@ def encode(url):
     encoded = ParseResult(*(idna(p) for p in parts))
     return _assemble(encoded)
 
-def _assemble(parts):
+def _assemble(parts, default_path=''):
     nurl = ''
     if parts.scheme:
         if parts.scheme in SCHEMES:
@@ -77,7 +77,7 @@ def _assemble(parts):
     if parts.path:
         nurl += normpath(parts.path)
     elif parts.scheme in SCHEMES:
-        nurl += '/'
+        nurl += default_path
     if parts.query:
         nurl += '?' + parts.query
     if parts.fragment:
@@ -174,15 +174,14 @@ def parse(url):
         (username, password, subdomain, domain, tld, port) = _split_netloc(netloc)
     else:
         username = password = subdomain = domain = tld = port = ''
-    path = parts.path if parts.path else ''
     return ParseResult(parts.scheme, username, password, subdomain, domain, tld,
-                       port, path, parts.query, parts.fragment)
+                       port, parts.path, parts.query, parts.fragment)
 
 def extract(url):
     parts = split(url)
     if parts.scheme:
         netloc = parts.netloc
-        path = parts.path if parts.path else ''
+        path = parts.path
     else:
         netloc = parts.path
         path = ''

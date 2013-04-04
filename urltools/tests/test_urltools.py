@@ -49,9 +49,15 @@ def test_normalize():
     assert normalize("mailto:foo@example.com") == "mailto:foo@example.com"
     assert normalize("mailto:foo@eXAMPle.cOM") == "mailto:foo@example.com"
 
+    assert normalize("") == ""
+
 
 def test_encode():
-    assert encode("http://exämple.com/") == "http://xn--exmple-cua.com/"
+    assert encode("http://exämple.com") == "http://xn--exmple-cua.com"
+    assert encode("http://müller.de/") == "http://xn--mller-kva.de/"
+    assert encode("http://ジェーピーニック.jp/") == "http://xn--hckqz9bzb1cyrb.jp/"
+    assert encode("http://пример.рф") == "http://xn--e1afmkfd.xn--p1ai"
+    assert encode("пример.рф") == "xn--e1afmkfd.xn--p1ai"
 
 
 def test_parse():

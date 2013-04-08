@@ -36,6 +36,8 @@ def test_normalize():
 
     assert normalize("http://example.com/a/./b/././c") == "http://example.com/a/b/c"
     assert normalize("http://example.com/a/../b") == "http://example.com/b"
+    assert normalize("http://example.com/////////foo") == "http://example.com/foo"
+    assert normalize("http://example.com/foo/.../bar") == "http://example.com/foo/.../bar"
 
     assert normalize("eXAmplE.com") == "example.com"
     assert normalize("example.com/a/../b") == "example.com/b"
@@ -51,6 +53,24 @@ def test_normalize():
 
     assert normalize("") == ""
 
+    assert normalize("http://example.com/?foo") == "http://example.com/?foo"
+    assert normalize("http://example.com?foo") == "http://example.com/?foo"
+    assert normalize("http://example.com/?foo=1&bar") == "http://example.com/?foo=1&bar"
+    assert normalize("http://example.com/foo/") == "http://example.com/foo/"
+    assert normalize("http://example.com/foo//bar") == "http://example.com/foo/bar"
+    assert normalize("http://example.com?") == "http://example.com/"
+    assert normalize("http://example.com/?") == "http://example.com/"
+    assert normalize("http://example.com//?") == "http://example.com/"
+    
+    assert normalize("http://example.com/foo/?http://example.com/bar/?x=http://examle.com/y/z") == "http://example.com/foo/?http://example.com/bar/?x=http://examle.com/y/z"
+    assert normalize("http://example.com/#foo?bar") == "http://example.com/#foo?bar"
+    assert normalize("http://example.com/#foo/bar/blub.html?x=1") == "http://example.com/#foo/bar/blub.html?x=1"
+
+    assert normalize("http://192.168.1.1/") == "http://192.168.1.1/"
+    assert normalize("http://192.168.1.1:8088/foo?x=1") == "http://192.168.1.1:8088/foo?x=1"
+    assert normalize("192.168.1.1") == "192.168.1.1"
+    assert normalize("192.168.1.1:8080/foo/bar") == "192.168.1.1:8080/foo/bar"
+
 
 def test_encode():
     assert encode("http://exämple.com") == "http://xn--exmple-cua.com"
@@ -65,6 +85,7 @@ def test_parse():
     assert parse("http://example.com:8080") == ('http', '', '', '', 'example', 'com', '8080', '', '', '')
     assert parse("http://example.ac.at") == ('http', '', '', '', 'example', 'ac.at', '', '', '', '')
     assert parse("http://example.co.uk") == ('http', '', '', '', 'example', 'co.uk', '', '', '', '')
+    assert parse("http://example.com/foo/") == ('http', '', '', '', 'example', 'com', '', '/foo/', '', '')
 
     assert parse("example.com.") == ('', '', '', '', '', '', '', 'example.com.', '', '')
     assert parse("example.com/abc") == ('', '', '', '', '', '', '', 'example.com/abc', '', '')
@@ -81,7 +102,7 @@ def test_extract():
     assert extract("http://example.com:8080") == ('http', '', '', '', 'example', 'com', '8080', '', '', '')
     assert extract("http://example.com:8080/abc?x=1&y=2#qwe") == ('http', '', '', '', 'example', 'com', '8080', '/abc', 'x=1&y=2', 'qwe')
     assert extract("http://example.ac.at") == ('http', '', '', '', 'example', 'ac.at', '', '', '', '')
-    assert extract("http://example.co.uk") == ('http', '', '', '', 'example', 'co.uk', '', '', '', '')
+    assert extract("http://example.co.uk/") == ('http', '', '', '', 'example', 'co.uk', '', '/', '', '')
     assert extract("http://foo.bar.example.co.uk") == ('http', '', '', 'foo.bar', 'example', 'co.uk', '', '', '', '')
 
     assert extract("example.com.") == ('', '', '', '', 'example', 'com', '', '', '', '')
@@ -124,6 +145,9 @@ def test_split_netloc():
 
     assert _split_netloc("example") == ('', '', '', 'example', '', '')
 
+    assert _split_netloc("192.168.1.1") == ('', '', '', '192.168.1.1', '', '')
+    assert _split_netloc("192.168.1.1:8080") == ('', '', '', '192.168.1.1', '', '8080')
+
 
 #@pytest.mark.skipif("True")
 def test_get_public_suffix_list():
@@ -159,3 +183,12 @@ def test_split():
 
     assert split("foo/bar") == ('', '', 'foo/bar', '', '')
     assert split("/foo/bar") == ('', '', '/foo/bar', '', '')
+
+    assert split("http://example.com?foo") == ('http', 'example.com', '', 'foo', '')
+    assert split("http://example.com/?foo") == ('http', 'example.com', '/', 'foo', '')
+    assert split("http://example.com?foo#bar") == ('http', 'example.com', '', 'foo', 'bar')
+    assert split("http://example.com/#foo?bar") == ('http', 'example.com', '/', '', 'foo?bar')
+
+    assert split("http://192.168.1.1/") == ('http', '192.168.1.1', '/', '', '')
+    assert split("http://192.168.1.1:8080/") == ('http', '192.168.1.1:8080', '/', '', '')
+    assert split("192.168.1.1") == ('', '', '192.168.1.1', '', '')

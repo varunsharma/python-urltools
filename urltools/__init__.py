@@ -1,3 +1,3 @@
 from urltools import normalize, parse, extract, encode
 
-__version__ = "0.1.3"
+__version__ = "0.1.4"

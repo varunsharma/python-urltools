@@ -65,11 +65,14 @@ def test_normalize():
     assert normalize("http://example.com/foo/?http://example.com/bar/?x=http://examle.com/y/z") == "http://example.com/foo/?http://example.com/bar/?x=http://examle.com/y/z"
     assert normalize("http://example.com/#foo?bar") == "http://example.com/#foo?bar"
     assert normalize("http://example.com/#foo/bar/blub.html?x=1") == "http://example.com/#foo/bar/blub.html?x=1"
+    assert normalize("http://example.com/foo#?=bar") == "http://example.com/foo#?=bar"
 
     assert normalize("http://192.168.1.1/") == "http://192.168.1.1/"
     assert normalize("http://192.168.1.1:8088/foo?x=1") == "http://192.168.1.1:8088/foo?x=1"
     assert normalize("192.168.1.1") == "192.168.1.1"
     assert normalize("192.168.1.1:8080/foo/bar") == "192.168.1.1:8080/foo/bar"
+
+    assert normalize("http://example.com/foo/bar/http://example.com") == "http://example.com/foo/bar/http:/example.com"
 
 
 def test_encode():
@@ -144,6 +147,8 @@ def test_split_netloc():
     assert _split_netloc("foo.bar.example.com:8888") == ('', '', 'foo.bar', 'example', 'com', '8888')
 
     assert _split_netloc("example") == ('', '', '', 'example', '', '')
+
+    assert _split_netloc("foo:bar@www.example.com:8080") == ('foo', 'bar', 'www', 'example', 'com', '8080')
 
     assert _split_netloc("192.168.1.1") == ('', '', '', '192.168.1.1', '', '')
     assert _split_netloc("192.168.1.1:8080") == ('', '', '', '192.168.1.1', '', '8080')

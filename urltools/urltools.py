@@ -26,6 +26,9 @@ from collections import namedtuple
 from posixpath import normpath
 
 
+__all__ = ["normalize", "parse", "extract", "encode"]
+
+
 PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
 
 def _get_public_suffix_list():
@@ -104,9 +107,7 @@ def _normalize_path(path):
 
 
 IP_RE = re.compile(r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
-PORT_RE = re.compile(r'(?<=.:)[1-9]+[0-9]{0,4}$')
-SCHEME_RE = re.compile(r'^[a-zA-Z]+:(//)?')
-USER_RE = re.compile(r'^[^:@]*:?[^:@]+@.*$')
+SCHEME_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 SplitResult = namedtuple('SplitResult', ['scheme', 'netloc', 'path', 'query',
                                          'fragment'])
 ParseResult = namedtuple('ParseResult', ['scheme', 'username', 'password',
@@ -117,10 +118,17 @@ def split(url):
     """Split URL into scheme, netloc, path, query and fragment
     """
     scheme = netloc = path = query = fragment = ''
-    if SCHEME_RE.search(url):
-        l = url.find(':')
-        scheme = url[:l].lower()
-        rest = url[l:].lstrip(':/')
+    has_scheme = False
+    scheme_end = url.find(':')
+    if scheme_end > 0:
+        for c in url[:scheme_end]:
+            if c not in SCHEME_CHARS:
+                break
+        else:
+            has_scheme = True
+    if has_scheme:
+        scheme = url[:scheme_end].lower()
+        rest = url[scheme_end:].lstrip(':/')
     else:
         rest = url
     l_path = rest.find('/')
@@ -164,14 +172,14 @@ def _split_netloc(netloc):
     """Split netloc into username, password, subdomain, domain, tld and port
     """
     username = password = subdomain = tld = port = ''
-    if USER_RE.search(netloc):
+    if '@' in netloc:
         user_pw, netloc = netloc.split('@', 1)
         if ':' in user_pw:
             username, password = user_pw.split(':', 1)
         else:
             username = user_pw
     if IP_RE.search(netloc):
-        if PORT_RE.search(netloc):
+        if ':' in netloc:
             domain, port = netloc.split(':')
         else:
             domain = netloc
@@ -179,7 +187,7 @@ def _split_netloc(netloc):
     netloc = _clean_netloc(netloc)
     if '.' not in netloc:
         return username, password, '', netloc, '', ''
-    if PORT_RE.search(netloc):
+    if ':' in netloc:
         domain, port = netloc.split(':')
     else:
         domain = netloc

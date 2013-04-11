@@ -118,18 +118,15 @@ def split(url):
     """Split URL into scheme, netloc, path, query and fragment
     """
     scheme = netloc = path = query = fragment = ''
-    has_scheme = False
     scheme_end = url.find(':')
     if scheme_end > 0:
         for c in url[:scheme_end]:
             if c not in SCHEME_CHARS:
                 break
         else:
-            has_scheme = True
-    if has_scheme:
-        scheme = url[:scheme_end].lower()
-        rest = url[scheme_end:].lstrip(':/')
-    else:
+            scheme = url[:scheme_end].lower()
+            rest = url[scheme_end:].lstrip(':/')
+    if not scheme:
         rest = url
     l_path = rest.find('/')
     l_query = rest.find('?')

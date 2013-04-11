@@ -106,8 +106,8 @@ def _normalize_path(path):
     return npath.replace('//', '/')
 
 
-IP_RE = re.compile(r'[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
 SCHEME_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+IP_CHARS = '0123456789.:'
 SplitResult = namedtuple('SplitResult', ['scheme', 'netloc', 'path', 'query',
                                          'fragment'])
 ParseResult = namedtuple('ParseResult', ['scheme', 'username', 'password',
@@ -175,7 +175,10 @@ def _split_netloc(netloc):
             username, password = user_pw.split(':', 1)
         else:
             username = user_pw
-    if IP_RE.search(netloc):
+    for c in netloc:
+        if c not in IP_CHARS:
+            break
+    else:
         if ':' in netloc:
             domain, port = netloc.split(':')
         else:

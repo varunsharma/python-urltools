@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 #import pytest
 
-from urltools import normalize, parse, extract, encode
-from urltools.urltools import _clean_netloc, _split_netloc
-from urltools.urltools import _get_public_suffix_list, split
+from urltools import normalize, parse, extract, encode, split, split_netloc
+from urltools.urltools import _get_public_suffix_list, _clean_netloc
 
 
 def test_normalize():
@@ -129,29 +128,29 @@ def test_clean_netloc():
 
 
 def test_split_netloc():
-    assert _split_netloc("example.com") == ('', '', '', 'example', 'com', '')
-    assert _split_netloc("example.ac.at") == ('', '', '', 'example', 'ac.at', '')
+    assert split_netloc("example.com") == ('', '', '', 'example', 'com', '')
+    assert split_netloc("example.ac.at") == ('', '', '', 'example', 'ac.at', '')
 
-    assert _split_netloc("example.jp") == ('', '', '', 'example', 'jp', '')
-    assert _split_netloc("foo.kyoto.jp") == ('', '', '', 'foo', 'kyoto.jp', '')
+    assert split_netloc("example.jp") == ('', '', '', 'example', 'jp', '')
+    assert split_netloc("foo.kyoto.jp") == ('', '', '', 'foo', 'kyoto.jp', '')
 
-    assert _split_netloc("example.gs.aa.no") == ('', '', '', 'example', 'gs.aa.no', '')
+    assert split_netloc("example.gs.aa.no") == ('', '', '', 'example', 'gs.aa.no', '')
 
-    assert _split_netloc("例子.中国") == ('', '', '', '例子', '中国', '')
-    assert _split_netloc("உதாரணம்.இந்தியா") == ('', '', '', 'உதாரணம்', 'இந்தியா','')
+    assert split_netloc("例子.中国") == ('', '', '', '例子', '中国', '')
+    assert split_netloc("உதாரணம்.இந்தியா") == ('', '', '', 'உதாரணம்', 'இந்தியா','')
 
-    assert _split_netloc("example.com:80") == ('', '', '', 'example', 'com', '80')
-    assert _split_netloc("example.com:8080") == ('', '', '', 'example', 'com', '8080')
+    assert split_netloc("example.com:80") == ('', '', '', 'example', 'com', '80')
+    assert split_netloc("example.com:8080") == ('', '', '', 'example', 'com', '8080')
 
-    assert _split_netloc("www.example.com") == ('', '', 'www', 'example', 'com', '')
-    assert _split_netloc("foo.bar.example.com:8888") == ('', '', 'foo.bar', 'example', 'com', '8888')
+    assert split_netloc("www.example.com") == ('', '', 'www', 'example', 'com', '')
+    assert split_netloc("foo.bar.example.com:8888") == ('', '', 'foo.bar', 'example', 'com', '8888')
 
-    assert _split_netloc("example") == ('', '', '', 'example', '', '')
+    assert split_netloc("example") == ('', '', '', 'example', '', '')
 
-    assert _split_netloc("foo:bar@www.example.com:8080") == ('foo', 'bar', 'www', 'example', 'com', '8080')
+    assert split_netloc("foo:bar@www.example.com:8080") == ('foo', 'bar', 'www', 'example', 'com', '8080')
 
-    assert _split_netloc("192.168.1.1") == ('', '', '', '192.168.1.1', '', '')
-    assert _split_netloc("192.168.1.1:8080") == ('', '', '', '192.168.1.1', '', '8080')
+    assert split_netloc("192.168.1.1") == ('', '', '', '192.168.1.1', '', '')
+    assert split_netloc("192.168.1.1:8080") == ('', '', '', '192.168.1.1', '', '8080')
 
 
 #@pytest.mark.skipif("True")

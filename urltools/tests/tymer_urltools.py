@@ -7,13 +7,13 @@ import tldextract
 from tymer import t, run, skip
 
 from urltools.urltools import normalize, parse, extract, encode, split
-from urltools.urltools import _assemble, _clean_netloc, _normalize_path, _split_netloc
+from urltools.urltools import assemble, _clean_netloc, normalize_path, split_netloc
 from urltools.urltools import _get_public_suffix_list
 
 
 setup_tymer = """
 from __main__ import normalize, parse, extract, encode, split
-from __main__ import _assemble, _clean_netloc, _normalize_path, _split_netloc
+from __main__ import assemble, _clean_netloc, normalize_path, split_netloc
 from __main__ import urlparse, posixpath
 from __main__ import tldextract
 from __main__ import _get_public_suffix_list
@@ -21,8 +21,8 @@ from __main__ import _get_public_suffix_list
 
 
 @skip
-def tymer__split_netloc():
-    t('_split_netloc("foo:bar@www.example.com:8080")')
+def tymer_split_netloc():
+    t('split_netloc("foo:bar@www.example.com:8080")')
 
 
 @skip
@@ -37,8 +37,8 @@ def tymer_split():
 
 
 @skip
-def tymer__normalize_path():
-    t('_normalize_path("/foo////../bar/./a/b/")')
+def tymer_normalize_path():
+    t('normalize_path("/foo////../bar/./a/b/")')
     t('posixpath.normpath("/foo////../bar/./a/b/")')
 
 
@@ -63,10 +63,10 @@ def tymer_parse():
 
 
 @skip
-def tymer__assemble():
+def tymer_assemble():
     stmt = """
     parts = extract("http://www.example.com:8080/abc?x=1#rt")
-    _assemble(parts)
+    assemble(parts)
     """
     t(stmt)
 

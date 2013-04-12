@@ -8,7 +8,7 @@ from tymer import t, run, skip
 
 from urltools.urltools import normalize, parse, extract, encode, split
 from urltools.urltools import assemble, _clean_netloc, normalize_path, split_netloc
-from urltools.urltools import _get_public_suffix_list
+from urltools.urltools import _get_public_suffix_list, normalize_path2
 
 
 setup_tymer = """
@@ -16,7 +16,7 @@ from __main__ import normalize, parse, extract, encode, split
 from __main__ import assemble, _clean_netloc, normalize_path, split_netloc
 from __main__ import urlparse, posixpath
 from __main__ import tldextract
-from __main__ import _get_public_suffix_list
+from __main__ import _get_public_suffix_list, normalize_path2
 """
 
 
@@ -36,10 +36,11 @@ def tymer_split():
     t('split("http://example.com")')
 
 
-@skip
+#@skip
 def tymer_normalize_path():
     t('normalize_path("/foo////../bar/./a/b/")')
     t('posixpath.normpath("/foo////../bar/./a/b/")')
+    t('normalize_path2("/foo////../bar/./a/b/")')
 
 
 @skip
@@ -54,7 +55,7 @@ def tymer__clean_netloc():
     t('_clean_netloc("fOO.baR.example.com")')
 
 
-#@skip
+@skip
 def tymer_parse():
     t('parse("http://example.com")')
     t('extract("http://example.com")')

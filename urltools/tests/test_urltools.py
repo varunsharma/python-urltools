@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #import pytest
 
-from urltools import normalize, parse, extract, encode, split, split_netloc
+from urltools import normalize, parse, extract, encode, split, split_netloc, normalize_path, normalize_path2
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
 
 
@@ -196,3 +196,17 @@ def test_split():
     assert split("http://192.168.1.1/") == ('http', '192.168.1.1', '/', '', '')
     assert split("http://192.168.1.1:8080/") == ('http', '192.168.1.1:8080', '/', '', '')
     assert split("192.168.1.1") == ('', '', '192.168.1.1', '', '')
+
+
+def test_normpath():
+    assert normalize_path("/") == "/"
+    assert normalize_path("/a/./b/././c") == "/a/b/c"
+    assert normalize_path("/a/../b") == "/b"
+    assert normalize_path("/////////foo") == "/foo"
+    assert normalize_path("/foo/.../bar") == "/foo/.../bar"
+
+    assert normalize_path2("/") == "/"
+    assert normalize_path2("/a/./b/././c") == "/a/b/c"
+    assert normalize_path2("/a/../b") == "/b"
+    assert normalize_path2("/////////foo") == "/foo"
+    assert normalize_path2("/foo/.../bar") == "/foo/.../bar"

@@ -27,7 +27,7 @@ from posixpath import normpath
 
 
 __all__ = ["parse", "extract", "split", "split_netloc", "assemble", "encode",
-           "normalize", "normalize_path"]
+           "normalize", "normalize_path", "normalize_path2"]
 
 
 PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
@@ -117,6 +117,21 @@ def normalize_path(path):
     if path.endswith('/') and not npath.endswith('/'):
         npath += '/'
     return npath.replace('//', '/')
+
+
+def normalize_path2(path):
+    parts = path.split('/')
+    for i in range(len(parts)):
+        if parts[i] == '.':
+            parts[i] = ''
+        elif parts[i] == '..':
+            parts[i] = ''
+            parts[i-1] = ''
+    nparts = []
+    for p in parts:
+        if p != '':
+            nparts.append(p)
+    return '/' + '/'.join(nparts)
 
 
 def split(url):

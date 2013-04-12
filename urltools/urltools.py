@@ -127,11 +127,8 @@ def normalize_path2(path):
         elif parts[i] == '..':
             parts[i] = ''
             parts[i-1] = ''
-    nparts = []
-    for p in parts:
-        if p != '':
-            nparts.append(p)
-    return '/' + '/'.join(nparts)
+    filtered = filter(None, parts)
+    return '/' + '/'.join(filtered)
 
 
 def split(url):

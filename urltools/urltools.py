@@ -113,22 +113,29 @@ def assemble(parts, default_path=''):
 def normalize_path(path):
     """Normalize path (collapse etc.)
     """
-    npath = normpath(path)
-    if path.endswith('/') and not npath.endswith('/'):
-        npath += '/'
-    return npath.replace('//', '/')
+    if path == '//':
+        return '/'
+    return normpath(path)
 
 
 def normalize_path2(path):
+    start_sl = True if path[0] == '/' else False
     parts = path.split('/')
-    for i in range(len(parts)):
-        if parts[i] == '.':
-            parts[i] = ''
-        elif parts[i] == '..':
-            parts[i] = ''
-            parts[i-1] = ''
-    filtered = filter(None, parts)
-    return '/' + '/'.join(filtered)
+    while 1:
+        parts = filter(None, parts)
+        for i in range(len(parts)):
+            if parts[i] == '.':
+                parts[i] = ''
+                break
+            if parts[i] == '..':
+                parts[i-1] = ''
+                parts[i] = '' 
+                break
+        else:
+            break
+    result = '/' if start_sl else ''
+    result += '/'.join(parts)
+    return result
 
 
 def split(url):

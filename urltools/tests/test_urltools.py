@@ -6,71 +6,85 @@ from urltools.urltools import _get_public_suffix_list, _clean_netloc
 
 
 def test_normalize():
+    assert normalize("") == ""
     assert normalize("http://example.com") == "http://example.com/"
     assert normalize("http://example.com/") == "http://example.com/"
+    assert normalize("    http://example.com/      ") == "http://example.com/"
     assert normalize("https://example.com/") == "https://example.com/"
     assert normalize("hTTp://example.com/") == "http://example.com/"
     assert normalize("http://ExAMPLe.COM/") == "http://example.com/"
     assert normalize("http://example.com./") == "http://example.com/"
-    assert normalize("http://example.com:80/") == "http://example.com/"
     assert normalize("http://example.com:/") == "http://example.com/"
     assert normalize("http://example.com/#") == "http://example.com/"
 
+    # port
+    assert normalize("http://example.com:80/") == "http://example.com/"
     assert normalize("http://example.com:8080/") == "http://example.com:8080/"
 
+    # subdomain
     assert normalize("http://www.example.com/") == "http://www.example.com/"
     assert normalize("http://www.example.com") == "http://www.example.com/"
     assert normalize("http://foo.bar.example.com/") == "http://foo.bar.example.com/"
 
-    assert normalize("http://example.com/a") == "http://example.com/a"
-    assert normalize("http://example.com/a/b/c") == "http://example.com/a/b/c"
-
-    assert normalize("http://example.com/?x=1") == "http://example.com/?x=1"
-    assert normalize("http://example.com/a?x=1") == "http://example.com/a?x=1"
-    assert normalize("http://example.com/a?x=1&y=2") == "http://example.com/a?x=1&y=2"
-
-    assert normalize("http://example.com/#abc") == "http://example.com/#abc"
-    assert normalize("http://example.com/a/b/c#abc") == "http://example.com/a/b/c#abc"
-    assert normalize("http://example.com/a/b/c?x=1#abc") == "http://example.com/a/b/c?x=1#abc"
-
-    assert normalize("http://example.com/a/./b/././c") == "http://example.com/a/b/c"
-    assert normalize("http://example.com/a/../b") == "http://example.com/b"
-    assert normalize("http://example.com/////////foo") == "http://example.com/foo"
-    assert normalize("http://example.com/foo/.../bar") == "http://example.com/foo/.../bar"
-
-    assert normalize("eXAmplE.com") == "example.com"
-    assert normalize("example.com/a/../b") == "example.com/b"
-
-    assert normalize("http://www.example.com") == "http://www.example.com/"
-    assert normalize("www.example.com") == "www.example.com"
-
-    assert normalize("http://foo:bar@example.com") == "http://foo:bar@example.com/"
-    assert normalize("http://Foo:BAR@exaMPLE.COM/") == "http://Foo:BAR@example.com/"
-
-    assert normalize("mailto:foo@example.com") == "mailto:foo@example.com"
-    assert normalize("mailto:foo@eXAMPle.cOM") == "mailto:foo@example.com"
-
-    assert normalize("") == ""
-
-    assert normalize("http://example.com/?foo") == "http://example.com/?foo"
-    assert normalize("http://example.com?foo") == "http://example.com/?foo"
-    assert normalize("http://example.com/?foo=1&bar") == "http://example.com/?foo=1&bar"
-    assert normalize("http://example.com/foo/") == "http://example.com/foo"
-    assert normalize("http://example.com/foo//bar") == "http://example.com/foo/bar"
-    assert normalize("http://example.com?") == "http://example.com/"
-    assert normalize("http://example.com/?") == "http://example.com/"
-    assert normalize("http://example.com//?") == "http://example.com/"
-    
-    assert normalize("http://example.com/foo/?http://example.com/bar/?x=http://examle.com/y/z") == "http://example.com/foo?http://example.com/bar/?x=http://examle.com/y/z"
-    assert normalize("http://example.com/#foo?bar") == "http://example.com/#foo?bar"
-    assert normalize("http://example.com/#foo/bar/blub.html?x=1") == "http://example.com/#foo/bar/blub.html?x=1"
-    assert normalize("http://example.com/foo#?=bar") == "http://example.com/foo#?=bar"
-
+    # ip
     assert normalize("http://192.168.1.1/") == "http://192.168.1.1/"
     assert normalize("http://192.168.1.1:8088/foo?x=1") == "http://192.168.1.1:8088/foo?x=1"
     assert normalize("192.168.1.1") == "192.168.1.1"
     assert normalize("192.168.1.1:8080/foo/bar") == "192.168.1.1:8080/foo/bar"
 
+    # path
+    assert normalize("http://example.com/a") == "http://example.com/a"
+    assert normalize("http://example.com/a/b/c") == "http://example.com/a/b/c"
+    assert normalize("http://example.com/foo/") == "http://example.com/foo"
+    assert normalize("http://example.com/a/./b/././c") == "http://example.com/a/b/c"
+    assert normalize("http://example.com/a/../b") == "http://example.com/b"
+    assert normalize("http://example.com/////////foo") == "http://example.com/foo"
+    assert normalize("http://example.com/foo/.../bar") == "http://example.com/foo/.../bar"
+    #assert normalize("http://example.com/foo+bar") == "http://example.com/foo bar"
+
+    # encoded path
+    assert normalize("http://example.com/%25%32%35") == "http://example.com/%25"
+    assert normalize("http://example.com/foo%25%32%35bar") == "http://example.com/foo%25bar"
+    assert normalize("http://example.com/foo/%25%32%35/bar") == "http://example.com/foo/%25/bar"
+    # %23 = #
+    #assert normalize("http://example.com/foo%23bar") == "http://example.com/foo%23bar"
+
+    # query
+    assert normalize("http://example.com/?x=1") == "http://example.com/?x=1"
+    assert normalize("http://example.com?x=1") == "http://example.com/?x=1"
+    assert normalize("http://example.com/a?x=1") == "http://example.com/a?x=1"
+    assert normalize("http://example.com/a/?x=1") == "http://example.com/a?x=1"
+    assert normalize("http://example.com/a?x=1&y=2") == "http://example.com/a?x=1&y=2"
+
+    # fragment
+    assert normalize("http://example.com/#abc") == "http://example.com/#abc"
+    assert normalize("http://example.com/a/b/c#abc") == "http://example.com/a/b/c#abc"
+    assert normalize("http://example.com/a/b/c?x=1#abc") == "http://example.com/a/b/c?x=1#abc"
+
+    # no scheme
+    assert normalize("eXAmplE.com") == "example.com"
+    assert normalize("example.com/a/../b") == "example.com/b"
+    assert normalize("www.example.com") == "www.example.com"
+
+    # username/password
+    assert normalize("http://foo:bar@example.com") == "http://foo:bar@example.com/"
+    assert normalize("http://Foo:BAR@exaMPLE.COM/") == "http://Foo:BAR@example.com/"
+
+    # scheme without //
+    assert normalize("mailto:foo@example.com") == "mailto:foo@example.com"
+    assert normalize("mailto:foo@eXAMPle.cOM") == "mailto:foo@example.com"
+
+    # malformed urls
+    assert normalize("http://example.com/?foo") == "http://example.com/?foo"
+    assert normalize("http://example.com?foo") == "http://example.com/?foo"
+    assert normalize("http://example.com/foo//bar") == "http://example.com/foo/bar"
+    assert normalize("http://example.com?") == "http://example.com/"
+    assert normalize("http://example.com/?") == "http://example.com/"
+    assert normalize("http://example.com//?") == "http://example.com/"
+    assert normalize("http://example.com/foo/?http://example.com/bar/?x=http://examle.com/y/z") == "http://example.com/foo?http://example.com/bar/?x=http://examle.com/y/z"
+    assert normalize("http://example.com/#foo?bar") == "http://example.com/#foo?bar"
+    assert normalize("http://example.com/#foo/bar/blub.html?x=1") == "http://example.com/#foo/bar/blub.html?x=1"
+    assert normalize("http://example.com/foo#?=bar") == "http://example.com/foo#?=bar"
     assert normalize("http://example.com/foo/bar/http://example.com") == "http://example.com/foo/bar/http:/example.com"
 
 
@@ -117,6 +131,8 @@ def test_extract():
 
     assert extract("http://пример.рф") == ('http', '', '', '', 'пример', 'рф', '', '', '', '')
     assert extract("http://إختبار.مصر/") == ('http', '', '', '', 'إختبار', 'مصر', '', '/', '', '')
+
+    assert extract("mailto:foo@bar.com") == ('mailto', 'foo', '', '', 'bar', 'com', '', '', '', '')
 
 
 def test_clean_netloc():
@@ -210,6 +226,7 @@ def test_normpath():
     assert normalize_path("/a/b/../../c") == "/c"
     assert normalize_path("/////////foo") == "/foo"
     assert normalize_path("/foo/.../bar") == "/foo/.../bar"
+    assert normalize_path("%25%32%35") == "%25"
 
     assert normalize_path2("/") == "/"
     assert normalize_path2("/a") == "/a"
@@ -222,3 +239,4 @@ def test_normpath():
     assert normalize_path2("/a/b/../../c") == "/c"
     assert normalize_path2("/////////foo") == "/foo"
     assert normalize_path2("/foo/.../bar") == "/foo/.../bar"
+    #assert normalize_path2("%25%32%35") == "%25"

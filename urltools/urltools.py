@@ -22,6 +22,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import os
 import re
 import urllib
+from urlparse import unquote
 from collections import namedtuple
 from posixpath import normpath
 
@@ -66,7 +67,7 @@ ParseResult = namedtuple('ParseResult', ['scheme', 'username', 'password',
 def normalize(url):
     """Normalize a URL
     """
-    parts = extract(url)
+    parts = extract(url.strip())
     return assemble(parts, default_path='/')
 
 
@@ -115,11 +116,10 @@ def normalize_path(path):
     """
     if path == '//':
         return '/'
-    return normpath(path)
+    return normpath(unquote(path))
 
 
 def normalize_path2(path):
-    start_sl = True if path[0] == '/' else False
     parts = path.split('/')
     while 1:
         parts = filter(None, parts)
@@ -133,7 +133,7 @@ def normalize_path2(path):
                 break
         else:
             break
-    result = '/' if start_sl else ''
+    result = '/' if path[0] == '/' else ''
     result += '/'.join(parts)
     return result
 

@@ -36,7 +36,7 @@ def tymer_split():
     t('split("http://example.com")')
 
 
-#@skip
+@skip
 def tymer_normalize_path():
     t('normalize_path("/foo////../bar/./a/b/")')
     t('posixpath.normpath("/foo////../bar/./a/b/")')

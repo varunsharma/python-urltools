@@ -57,30 +57,31 @@ Besides the already described main functions `urltools` has some more functions 
         'http://xn--mller-kva.de/'
 
 * `normalize_path`
+
         >>> normalize_path("/a/b/../../c")
         '/c'
 
 * `normalize_query`
 
-    >>> normalize_query("x=1&y=&z=3")
-    'x=1&z=3'
+        >>> normalize_query("x=1&y=&z=3")
+        'x=1&z=3'
 
 * `assemble` a new URL from a `ParseResult`
 
 * `split` (basically the same as `urlparse.urlparse`)
 
-    >>> split("http://www.example.com/abc?x=1&y=2#foo")
-    SplitResult(scheme='http', netloc='www.example.com', path='/abc', query='x=1&y=2', fragment='foo')
+        >>> split("http://www.example.com/abc?x=1&y=2#foo")
+        SplitResult(scheme='http', netloc='www.example.com', path='/abc', query='x=1&y=2', fragment='foo')
 
 * `split_netloc`
 
-    >>> split_netloc("foo:bar@www.example.com:8080")
-    ('foo', 'bar', 'www.example.com', '8080')
+        >>> split_netloc("foo:bar@www.example.com:8080")
+        ('foo', 'bar', 'www.example.com', '8080')
 
 * `split_host`
 
-    >>> split_host("www.example.ac.at")
-    ('www', 'example', 'ac.at')
+        >>> split_host("www.example.ac.at")
+        ('www', 'example', 'ac.at')
 
 
 

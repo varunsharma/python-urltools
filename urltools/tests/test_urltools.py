@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
 #import pytest
 
-from urltools import normalize, parse, extract, encode, split, split_netloc, normalize_path, normalize_path2, normalize_query
+from urltools import parse, extract, encode, split, split_netloc, split_host
+from urltools import normalize, normalize_path, normalize_query
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
+
+
+#@pytest.mark.skipif("True")
+def test_get_public_suffix_list():
+    psl = _get_public_suffix_list()
+    assert "de" in psl
+    assert len(psl) > 6000
 
 
 def test_normalize():
@@ -88,6 +96,30 @@ def test_normalize():
     assert normalize("http://example.com/foo/bar/http://example.com") == "http://example.com/foo/bar/http:/example.com"
 
 
+def test_normalize_path():
+    assert normalize_path("/") == "/"
+    assert normalize_path("/a") == "/a"
+    assert normalize_path("a") == "a"
+    assert normalize_path("/a/b") == "/a/b"
+    assert normalize_path("/a/b/") == "/a/b"
+    assert normalize_path("/a/b/c") == "/a/b/c"
+    assert normalize_path("/a/./b/././c") == "/a/b/c"
+    assert normalize_path("/a/../b") == "/b"
+    assert normalize_path("/a/b/../../c") == "/c"
+    assert normalize_path("/////////foo") == "/foo"
+    assert normalize_path("/foo/.../bar") == "/foo/.../bar"
+    assert normalize_path("%25%32%35") == "%25"
+
+
+def test_normalize_query():
+    assert normalize_query("") == ""
+    assert normalize_query("x=1&y=2") == "x=1&y=2"
+    assert normalize_query("y=2&x=1") == "x=1&y=2"
+    assert normalize_query("x=1&y=&z=3") == "x=1&z=3"
+    assert normalize_query("x=&y=&z=") == ""
+    assert normalize_query("=1&=2&=3") == ""
+
+
 def test_encode():
     assert encode("http://exämple.com") == "http://xn--exmple-cua.com"
     assert encode("http://müller.de/") == "http://xn--mller-kva.de/"
@@ -143,39 +175,6 @@ def test_clean_netloc():
     assert _clean_netloc("ПриМЕр.Рф") == "пример.рф"
 
 
-def test_split_netloc():
-    assert split_netloc("example.com") == ('', '', '', 'example', 'com', '')
-    assert split_netloc("example.ac.at") == ('', '', '', 'example', 'ac.at', '')
-
-    assert split_netloc("example.jp") == ('', '', '', 'example', 'jp', '')
-    assert split_netloc("foo.kyoto.jp") == ('', '', '', 'foo', 'kyoto.jp', '')
-
-    assert split_netloc("example.gs.aa.no") == ('', '', '', 'example', 'gs.aa.no', '')
-
-    assert split_netloc("例子.中国") == ('', '', '', '例子', '中国', '')
-    assert split_netloc("உதாரணம்.இந்தியா") == ('', '', '', 'உதாரணம்', 'இந்தியா','')
-
-    assert split_netloc("example.com:80") == ('', '', '', 'example', 'com', '80')
-    assert split_netloc("example.com:8080") == ('', '', '', 'example', 'com', '8080')
-
-    assert split_netloc("www.example.com") == ('', '', 'www', 'example', 'com', '')
-    assert split_netloc("foo.bar.example.com:8888") == ('', '', 'foo.bar', 'example', 'com', '8888')
-
-    assert split_netloc("example") == ('', '', '', 'example', '', '')
-
-    assert split_netloc("foo:bar@www.example.com:8080") == ('foo', 'bar', 'www', 'example', 'com', '8080')
-
-    assert split_netloc("192.168.1.1") == ('', '', '', '192.168.1.1', '', '')
-    assert split_netloc("192.168.1.1:8080") == ('', '', '', '192.168.1.1', '', '8080')
-
-
-#@pytest.mark.skipif("True")
-def test_get_public_suffix_list():
-    psl = _get_public_suffix_list()
-    assert "de" in psl
-    assert len(psl) > 6000
-
-
 def test_split():
     assert split("http://www.example.com") == ('http', 'www.example.com', '', '', '')
     assert split("http://www.example.com/") == ('http', 'www.example.com', '/', '', '')
@@ -214,38 +213,32 @@ def test_split():
     assert split("192.168.1.1") == ('', '', '192.168.1.1', '', '')
 
 
-def test_normpath():
-    assert normalize_path("/") == "/"
-    assert normalize_path("/a") == "/a"
-    assert normalize_path("a") == "a"
-    assert normalize_path("/a/b") == "/a/b"
-    assert normalize_path("/a/b/") == "/a/b"
-    assert normalize_path("/a/b/c") == "/a/b/c"
-    assert normalize_path("/a/./b/././c") == "/a/b/c"
-    assert normalize_path("/a/../b") == "/b"
-    assert normalize_path("/a/b/../../c") == "/c"
-    assert normalize_path("/////////foo") == "/foo"
-    assert normalize_path("/foo/.../bar") == "/foo/.../bar"
-    assert normalize_path("%25%32%35") == "%25"
+def test_split_netloc():
+    assert split_netloc("example") == ('', '', 'example', '')
 
-    assert normalize_path2("/") == "/"
-    assert normalize_path2("/a") == "/a"
-    assert normalize_path2("a") == "a"
-    assert normalize_path2("/a/b") == "/a/b"
-    assert normalize_path2("/a/b/") == "/a/b"
-    assert normalize_path2("/a/b/c") == "/a/b/c"
-    assert normalize_path2("/a/./b/././c") == "/a/b/c"
-    assert normalize_path2("/a/../b") == "/b"
-    assert normalize_path2("/a/b/../../c") == "/c"
-    assert normalize_path2("/////////foo") == "/foo"
-    assert normalize_path2("/foo/.../bar") == "/foo/.../bar"
-    #assert normalize_path2("%25%32%35") == "%25"
+    assert split_netloc("example.com") == ('', '', 'example.com', '')
+    assert split_netloc("www.example.com") == ('', '', 'www.example.com', '')
+
+    assert split_netloc("example.com:80") == ('', '', 'example.com', '80')
+    assert split_netloc("example.com:8080") == ('', '', 'example.com', '8080')
+    assert split_netloc("foo.bar.example.com:8888") == ('', '', 'foo.bar.example.com', '8888')
+
+    assert split_netloc("foo:bar@www.example.com:8080") == ('foo', 'bar', 'www.example.com', '8080')
+
+    assert split_netloc("192.168.1.1") == ('', '', '192.168.1.1', '')
+    assert split_netloc("192.168.1.1:8080") == ('', '', '192.168.1.1', '8080')
 
 
-def test_normalize_query():
-    assert normalize_query("") == ""
-    assert normalize_query("x=1&y=2") == "x=1&y=2"
-    assert normalize_query("y=2&x=1") == "x=1&y=2"
-    assert normalize_query("x=1&y=&z=3") == "x=1&z=3"
-    assert normalize_query("x=&y=&z=") == ""
-    assert normalize_query("=1&=2&=3") == ""
+def test_split_host():
+    assert split_host("example.com") == ('', 'example', 'com')
+    assert split_host("www.example.com") == ('www', 'example', 'com')
+    assert split_host("www.foo.bar.example.com") == ('www.foo.bar', 'example', 'com')
+    assert split_host("example.ac.at") == ('', 'example', 'ac.at')
+
+    assert split_host("example.jp") == ('', 'example', 'jp')
+    assert split_host("foo.kyoto.jp") == ('', 'foo', 'kyoto.jp')
+
+    assert split_host("example.gs.aa.no") == ('', 'example', 'gs.aa.no')
+
+    assert split_host("例子.中国") == ('', '例子', '中国')
+    assert split_host("உதாரணம்.இந்தியா") == ('', 'உதாரணம்', 'இந்தியா')

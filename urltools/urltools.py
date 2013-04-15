@@ -28,8 +28,8 @@ from posixpath import normpath
 
 
 __all__ = ["ParseResult", "SplitResult", "parse", "extract", "split",
-           "split_netloc", "assemble", "encode", "normalize", "normalize_path",
-           "normalize_path2", "normalize_query"]
+           "split_netloc", "split_host", "assemble", "encode", "normalize",
+           "normalize_path", "normalize_query"]
 
 
 PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
@@ -68,7 +68,20 @@ ParseResult = namedtuple('ParseResult', ['scheme', 'username', 'password',
 def normalize(url):
     """Normalize a URL
     """
-    parts = extract(url.strip())
+    url_parts = split(url.strip())
+    if url_parts.scheme:
+        netloc = url_parts.netloc
+        path = url_parts.path
+    else:
+        netloc = url_parts.path
+        path = ''
+        if '/' in netloc:
+            tmp = netloc.split('/', 1)
+            netloc = tmp[0]
+            path = '/' + tmp[1]
+    username, password, host, port = split_netloc(netloc)
+    parts = ParseResult(url_parts.scheme, username, password, None, host, None,
+                        port, path, url_parts.query, url_parts.fragment)
     return assemble(parts, default_path='/')
 
 
@@ -122,27 +135,6 @@ def normalize_path(path):
     return normpath(unquote(path))
 
 
-def normalize_path2(path):
-    if path in ['//', '/', '']:
-        return '/'
-    parts = path.split('/')
-    while 1:
-        parts = filter(None, parts)
-        for i in range(len(parts)):
-            if parts[i] == '.':
-                parts[i] = ''
-                break
-            if parts[i] == '..':
-                parts[i-1] = ''
-                parts[i] = '' 
-                break
-        else:
-            break
-    result = '/' if path[0] == '/' else ''
-    result += '/'.join(parts)
-    return result
-
-
 def normalize_query(query):
     """Normalize query (sort params by name, remove params without value)
     """
@@ -157,6 +149,40 @@ def normalize_query(query):
                 nparams.append("%s=%s" % (k, v))
     nparams.sort()
     return '&'.join(nparams)
+
+
+def parse(url):
+    """Parse a URL
+    """
+    parts = split(url)
+    if parts.scheme:
+        netloc = parts.netloc
+        (username, password, host, port) = split_netloc(netloc)
+        (subdomain, domain, tld) = split_host(host)
+    else:
+        username = password = subdomain = domain = tld = port = ''
+    return ParseResult(parts.scheme, username, password, subdomain, domain, tld,
+                       port, parts.path, parts.query, parts.fragment)
+
+
+def extract(url):
+    """Extract as much information from a (relative) URL as possible
+    """
+    parts = split(url)
+    if parts.scheme:
+        netloc = parts.netloc
+        path = parts.path
+    else:
+        netloc = parts.path
+        path = ''
+        if '/' in netloc:
+            tmp = netloc.split('/', 1)
+            netloc = tmp[0]
+            path = '/' + tmp[1]
+    (username, password, host, port) = split_netloc(netloc)
+    (subdomain, domain, tld) = split_host(host)
+    return ParseResult(parts.scheme, username, password, subdomain, domain, tld,
+                       port, path, parts.query, parts.fragment)
 
 
 def split(url):
@@ -213,32 +239,35 @@ def _clean_netloc(netloc):
 
 
 def split_netloc(netloc):
-    """Split netloc into username, password, subdomain, domain, tld and port
+    """Split netloc into username, password, host and port
     """
-    username = password = subdomain = tld = port = ''
+    username = password = host = port = ''
     if '@' in netloc:
         user_pw, netloc = netloc.split('@', 1)
         if ':' in user_pw:
             username, password = user_pw.split(':', 1)
         else:
             username = user_pw
-    for c in netloc:
+    netloc = _clean_netloc(netloc)
+    if '.' not in netloc:
+        return username, password, netloc, ''
+    if ':' in netloc:
+        host, port = netloc.split(':')
+    else:
+        host = netloc
+    return username, password, host, port
+
+
+def split_host(host):
+    """Use the Public Suffix List to split host into subdomain, domain and tld
+    """
+    domain = subdomain = tld = ''
+    for c in host:
         if c not in IP_CHARS:
             break
     else:
-        if ':' in netloc:
-            domain, port = netloc.split(':')
-        else:
-            domain = netloc
-        return username, password, '', domain, '', port
-    netloc = _clean_netloc(netloc)
-    if '.' not in netloc:
-        return username, password, '', netloc, '', ''
-    if ':' in netloc:
-        domain, port = netloc.split(':')
-    else:
-        domain = netloc
-    parts = domain.split('.')
+        return '', host, ''
+    parts = host.split('.')
     for i in range(len(parts)):
         tld = '.'.join(parts[i:])
         wildcard_tld = '*.' + tld
@@ -256,36 +285,4 @@ def split_netloc(netloc):
             break
     if '.' in domain:
         (subdomain, domain) = domain.rsplit('.', 1) 
-    return username, password, subdomain, domain, tld, port
-
-
-def parse(url):
-    """Parse a URL
-    """
-    parts = split(url)
-    if parts.scheme:
-        netloc = parts.netloc
-        (username, password, subdomain, domain, tld, port) = split_netloc(netloc)
-    else:
-        username = password = subdomain = domain = tld = port = ''
-    return ParseResult(parts.scheme, username, password, subdomain, domain, tld,
-                       port, parts.path, parts.query, parts.fragment)
-
-
-def extract(url):
-    """Extract as much information from a (relative) URL as possible
-    """
-    parts = split(url)
-    if parts.scheme:
-        netloc = parts.netloc
-        path = parts.path
-    else:
-        netloc = parts.path
-        path = ''
-        if '/' in netloc:
-            tmp = netloc.split('/', 1)
-            netloc = tmp[0]
-            path = '/' + tmp[1]
-    (username, password, subdomain, domain, tld, port) = split_netloc(netloc)
-    return ParseResult(parts.scheme, username, password, subdomain, domain, tld,
-                       port, path, parts.query, parts.fragment)
+    return subdomain, domain, tld

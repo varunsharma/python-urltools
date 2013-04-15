@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #import pytest
 
-from urltools import normalize, parse, extract, encode, split, split_netloc, normalize_path, normalize_path2
+from urltools import normalize, parse, extract, encode, split, split_netloc, normalize_path, normalize_path2, normalize_query
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
 
 
@@ -75,8 +75,8 @@ def test_normalize():
     assert normalize("mailto:foo@eXAMPle.cOM") == "mailto:foo@example.com"
 
     # malformed urls
-    assert normalize("http://example.com/?foo") == "http://example.com/?foo"
-    assert normalize("http://example.com?foo") == "http://example.com/?foo"
+    assert normalize("http://example.com/?foo") == "http://example.com/"
+    assert normalize("http://example.com?foo") == "http://example.com/"
     assert normalize("http://example.com/foo//bar") == "http://example.com/foo/bar"
     assert normalize("http://example.com?") == "http://example.com/"
     assert normalize("http://example.com/?") == "http://example.com/"
@@ -240,3 +240,12 @@ def test_normpath():
     assert normalize_path2("/////////foo") == "/foo"
     assert normalize_path2("/foo/.../bar") == "/foo/.../bar"
     #assert normalize_path2("%25%32%35") == "%25"
+
+
+def test_normalize_query():
+    assert normalize_query("") == ""
+    assert normalize_query("x=1&y=2") == "x=1&y=2"
+    assert normalize_query("y=2&x=1") == "x=1&y=2"
+    assert normalize_query("x=1&y=&z=3") == "x=1&z=3"
+    assert normalize_query("x=&y=&z=") == ""
+    assert normalize_query("=1&=2&=3") == ""

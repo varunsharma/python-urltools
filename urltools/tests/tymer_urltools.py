@@ -7,17 +7,24 @@ import tldextract
 from tymer import t, run, skip
 
 from urltools.urltools import normalize, parse, extract, encode, split
-from urltools.urltools import assemble, _clean_netloc, normalize_path, split_netloc
+from urltools.urltools import assemble, _clean_netloc, normalize_path, split_netloc, normalize_query
 from urltools.urltools import _get_public_suffix_list, normalize_path2
 
 
 setup_tymer = """
 from __main__ import normalize, parse, extract, encode, split
-from __main__ import assemble, _clean_netloc, normalize_path, split_netloc
+from __main__ import assemble, _clean_netloc, normalize_path, split_netloc, normalize_query
 from __main__ import urlparse, posixpath
 from __main__ import tldextract
 from __main__ import _get_public_suffix_list, normalize_path2
 """
+
+
+#@skip
+def tymer_normalize_query():
+    t('normalize_query("")')
+    t('normalize_query("x=1")')
+    t('normalize_query("x=1&y=&z=3")')
 
 
 @skip

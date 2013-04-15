@@ -27,8 +27,9 @@ from collections import namedtuple
 from posixpath import normpath
 
 
-__all__ = ["parse", "extract", "split", "split_netloc", "assemble", "encode",
-           "normalize", "normalize_path", "normalize_path2"]
+__all__ = ["ParseResult", "SplitResult", "parse", "extract", "split",
+           "split_netloc", "assemble", "encode", "normalize", "normalize_path",
+           "normalize_path2", "normalize_query"]
 
 
 PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
@@ -105,7 +106,9 @@ def assemble(parts, default_path=''):
     elif parts.scheme in SCHEMES:
         nurl += default_path
     if parts.query:
-        nurl += '?' + parts.query
+        query = normalize_query(parts.query)
+        if query:
+            nurl += '?' + query
     if parts.fragment:
         nurl += '#' + parts.fragment
     return nurl
@@ -114,12 +117,14 @@ def assemble(parts, default_path=''):
 def normalize_path(path):
     """Normalize path (collapse etc.)
     """
-    if path == '//':
+    if path in ['//', '/', '']:
         return '/'
     return normpath(unquote(path))
 
 
 def normalize_path2(path):
+    if path in ['//', '/', '']:
+        return '/'
     parts = path.split('/')
     while 1:
         parts = filter(None, parts)
@@ -136,6 +141,22 @@ def normalize_path2(path):
     result = '/' if path[0] == '/' else ''
     result += '/'.join(parts)
     return result
+
+
+def normalize_query(query):
+    """Normalize query (sort params by name, remove params without value)
+    """
+    if query == '' or len(query) <= 2:
+        return ''
+    params = query.split('&')
+    nparams = []
+    for param in params:
+        if '=' in param:
+            k, v = param.split('=', 1)
+            if k and v:
+                nparams.append("%s=%s" % (k, v))
+    nparams.sort()
+    return '&'.join(nparams)
 
 
 def split(url):

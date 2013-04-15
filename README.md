@@ -53,13 +53,12 @@ Besides the already described main functions `urltools` has some more functions 
 
 * `encode` (IDNA, see RFC 3490)
 
-    >>> urltools.encode("http://müller.de")
-    'http://xn--mller-kva.de/'
+        >>> urltools.encode("http://müller.de")
+        'http://xn--mller-kva.de/'
 
 * `normalize_path`
-
-    >>> normalize_path("/a/b/../../c")
-    '/c'
+        >>> normalize_path("/a/b/../../c")
+        '/c'
 
 * `normalize_query`
 

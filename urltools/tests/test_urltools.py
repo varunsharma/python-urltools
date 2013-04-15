@@ -48,7 +48,7 @@ def test_normalize():
     assert normalize("http://example.com/a/../b") == "http://example.com/b"
     assert normalize("http://example.com/////////foo") == "http://example.com/foo"
     assert normalize("http://example.com/foo/.../bar") == "http://example.com/foo/.../bar"
-    #assert normalize("http://example.com/foo+bar") == "http://example.com/foo bar"
+    assert normalize("http://example.com/foo+bar") == "http://example.com/foo+bar"
 
     # encoded path
     assert normalize("http://example.com/%25%32%35") == "http://example.com/%25"
@@ -63,6 +63,8 @@ def test_normalize():
     assert normalize("http://example.com/a?x=1") == "http://example.com/a?x=1"
     assert normalize("http://example.com/a/?x=1") == "http://example.com/a?x=1"
     assert normalize("http://example.com/a?x=1&y=2") == "http://example.com/a?x=1&y=2"
+    assert normalize("http://example.com/a?y=2&x=1") == "http://example.com/a?x=1&y=2"
+    assert normalize("http://example.com/a?x=&y=2") == "http://example.com/a?y=2"
 
     # fragment
     assert normalize("http://example.com/#abc") == "http://example.com/#abc"
@@ -134,6 +136,7 @@ def test_parse():
     assert parse("http://example.ac.at") == ('http', '', '', '', 'example', 'ac.at', '', '', '', '')
     assert parse("http://example.co.uk") == ('http', '', '', '', 'example', 'co.uk', '', '', '', '')
     assert parse("http://example.com/foo/") == ('http', '', '', '', 'example', 'com', '', '/foo/', '', '')
+    assert parse("http://foo:bar@www.example.com:1234/foo/?x=1#bla") == ('http', 'foo', 'bar', 'www', 'example', 'com', '1234', '/foo/', 'x=1', 'bla')
 
     assert parse("example.com.") == ('', '', '', '', '', '', '', 'example.com.', '', '')
     assert parse("example.com/abc") == ('', '', '', '', '', '', '', 'example.com/abc', '', '')
@@ -152,6 +155,7 @@ def test_extract():
     assert extract("http://example.ac.at") == ('http', '', '', '', 'example', 'ac.at', '', '', '', '')
     assert extract("http://example.co.uk/") == ('http', '', '', '', 'example', 'co.uk', '', '/', '', '')
     assert extract("http://foo.bar.example.co.uk") == ('http', '', '', 'foo.bar', 'example', 'co.uk', '', '', '', '')
+    assert extract("http://foo:bar@www.example.com:1234/foo/?x=1#bla") == ('http', 'foo', 'bar', 'www', 'example', 'com', '1234', '/foo/', 'x=1', 'bla')
 
     assert extract("example.com.") == ('', '', '', '', 'example', 'com', '', '', '', '')
     assert extract("example.com/abc") == ('', '', '', '', 'example', 'com', '', '/abc', '', '')

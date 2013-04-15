@@ -11,13 +11,13 @@ Some functions to parse and normalize URLs.
     >>> urltools.normalize("Http://exAMPLE.com./foo")
     http://example.com/foo
 
-
-### Encode
-
-IDNA encoding (see RFC 3490).
-
-    >>> urltools.encode("http://müller.de")
-    'http://xn--mller-kva.de/'
+* tolower scheme
+* tolower host
+* remove HTTP default port (80)
+* remove ':' without port
+* remove DNS root label
+* collapse path (remove '//', '/./', '/../')
+* sort query params and remove params without value
 
 
 ### Parse
@@ -34,6 +34,13 @@ URLs and `extract` always tries to extract as much information as possible.
 
     >>> urltools.extract("www.example.co.uk/abc")
     ParseResult(scheme='', username='', password='', subdomain='www', domain='example', tld='co.uk', port='', path='/abc', query='', fragment='')
+
+### Encode
+
+IDNA encoding (see RFC 3490).
+
+    >>> urltools.encode("http://müller.de")
+    'http://xn--mller-kva.de/'
 
 
 ## Installation

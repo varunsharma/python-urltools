@@ -1,22 +1,15 @@
 # -*- coding: utf-8 -*-
 
-import posixpath
-from urlparse import urlparse
-
-import tldextract
-from tymer import t, run, skip
-
-from urltools.urltools import normalize, parse, extract, encode, split, split_netloc
-from urltools.urltools import assemble, _clean_netloc, normalize_path, normalize_query
-from urltools.urltools import _get_public_suffix_list
+from tymer import t, skip
 
 
 setup_tymer = """
-from __main__ import normalize, parse, extract, encode, split, split_netloc
-from __main__ import assemble, _clean_netloc, normalize_path, normalize_query
-from __main__ import urlparse, posixpath
-from __main__ import tldextract
-from __main__ import _get_public_suffix_list
+import tldextract, posixpath
+from urlparse import urlparse
+
+from urltools.urltools import assemble, parse, extract, encode, split, split_netloc
+from urltools.urltools import normalize, normalize_path, normalize_query
+from urltools.urltools import _get_public_suffix_list, _clean_netloc
 """
 
 
@@ -68,7 +61,3 @@ def tymer_assemble():
     assemble(parts)
     """
     t(stmt)
-
-
-if __name__ == '__main__':
-    run()

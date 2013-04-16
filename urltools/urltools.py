@@ -129,9 +129,7 @@ def assemble(parts, default_path=''):
     elif parts.scheme in SCHEMES:
         nurl += default_path
     if parts.query:
-        query = parts.query
-        if query:
-            nurl += '?' + query
+        nurl += '?' + parts.query
     if parts.fragment:
         nurl += '#' + parts.fragment
     return nurl

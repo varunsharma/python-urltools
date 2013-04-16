@@ -140,8 +140,6 @@ def normalize_port(scheme, port):
         return port
     if port and port != DEFAULT_PORT[scheme]:
         return port
-    else:
-        return None
 
 
 def normalize_path(path):
@@ -149,7 +147,7 @@ def normalize_path(path):
     """
     if path == '':
         return ''
-    elif path in ['//', '/']:
+    if path in ['//', '/']:
         return '/'
     return normpath(unquote(path))
 

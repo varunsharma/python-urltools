@@ -27,6 +27,8 @@ def test_normalize():
 
     # port
     assert normalize("http://example.com:80/") == "http://example.com/"
+    assert normalize("https://example.com:443/") == "https://example.com/"
+    assert normalize("ws://example.com:80/") == "ws://example.com/"
     assert normalize("http://example.com:8080/") == "http://example.com:8080/"
 
     # subdomain

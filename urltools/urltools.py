@@ -54,9 +54,16 @@ PSL = _get_public_suffix_list()
 
 SCHEMES = ['http', 'https', 'ftp', 'sftp', 'file', 'gopher', 'imap', 'mms',
            'news', 'nntp', 'telnet', 'prospero', 'rsync', 'rtsp', 'rtspu',
-           'svn', 'git']
+           'svn', 'git', 'ws', 'wss']
 SCHEME_CHARS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 IP_CHARS = '0123456789.:'
+DEFAULT_PORT = {
+    'http': '80',
+    'https': '443',
+    'ws': '80',
+    'wss': '443',
+    'ftp': '21'
+}
 
 SplitResult = namedtuple('SplitResult', ['scheme', 'netloc', 'path', 'query',
                                          'fragment'])
@@ -68,20 +75,23 @@ ParseResult = namedtuple('ParseResult', ['scheme', 'username', 'password',
 def normalize(url):
     """Normalize a URL
     """
-    url_parts = split(url.strip())
-    if url_parts.scheme:
-        netloc = url_parts.netloc
-        path = url_parts.path
+    parts = split(url.strip())
+    if parts.scheme:
+        netloc = parts.netloc
+        path = parts.path
     else:
-        netloc = url_parts.path
+        netloc = parts.path
         path = ''
         if '/' in netloc:
             tmp = netloc.split('/', 1)
             netloc = tmp[0]
             path = '/' + tmp[1]
     username, password, host, port = split_netloc(netloc)
-    parts = ParseResult(url_parts.scheme, username, password, None, host, None,
-                        port, path, url_parts.query, url_parts.fragment)
+    port = normalize_port(parts.scheme, port)
+    path = normalize_path(path)
+    query = normalize_query(parts.query)
+    parts = ParseResult(parts.scheme, username, password, None, host, None,
+                        port, path, query, parts.fragment)
     return assemble(parts, default_path='/')
 
 
@@ -112,14 +122,14 @@ def assemble(parts, default_path=''):
     nurl += parts.domain
     if parts.tld:
         nurl += '.' + parts.tld
-    if parts.port and parts.port != '80':
+    if parts.port:
         nurl += ':' + parts.port
     if parts.path:
-        nurl += normalize_path(parts.path)
+        nurl += parts.path
     elif parts.scheme in SCHEMES:
         nurl += default_path
     if parts.query:
-        query = normalize_query(parts.query)
+        query = parts.query
         if query:
             nurl += '?' + query
     if parts.fragment:
@@ -127,10 +137,21 @@ def assemble(parts, default_path=''):
     return nurl
 
 
+def normalize_port(scheme, port):
+    if not scheme:
+        return port
+    if port and port != DEFAULT_PORT[scheme]:
+        return port
+    else:
+        return None
+
+
 def normalize_path(path):
     """Normalize path (collapse etc.)
     """
-    if path in ['//', '/', '']:
+    if path == '':
+        return ''
+    elif path in ['//', '/']:
         return '/'
     return normpath(unquote(path))
 

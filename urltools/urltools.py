@@ -173,8 +173,7 @@ def parse(url):
     """
     parts = split(url)
     if parts.scheme:
-        netloc = parts.netloc
-        (username, password, host, port) = split_netloc(netloc)
+        (username, password, host, port) = split_netloc(parts.netloc)
         (subdomain, domain, tld) = split_host(host)
     else:
         username = password = subdomain = domain = tld = port = ''
@@ -250,7 +249,7 @@ def split(url):
 
 
 def _clean_netloc(netloc):
-    """Remove trailing '.'s and ':'s from a URL and tolower
+    """Remove trailing '.' and ':' and tolower
     """
     return netloc.rstrip('.:').decode('utf-8').lower().encode('utf-8')
 

@@ -29,7 +29,7 @@ from posixpath import normpath
 
 __all__ = ["ParseResult", "SplitResult", "parse", "extract", "split",
            "split_netloc", "split_host", "assemble", "encode", "normalize",
-           "normalize_path", "normalize_query", "unquote"]
+           "normalize_path", "normalize_query", "unquote2"]
 
 
 PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
@@ -170,15 +170,30 @@ def normalize_query(query):
     nparams.sort()
     return '&'.join(nparams)
 
+
 UNQUOTE_EXCEPTIONS = {
     'path': ' /?;%+#',
     'query': ' ?&=+%#',
     'fragment': ' +%#'
 }
+_hextochr = {'%02x' % i: chr(i) for i in range(256)}
 
-#def unquote(data, exceptions=[]):
-#    if '%' not in data:
-#        return data
+def unquote2(text, exceptions=[]):
+    if '%' not in text:
+        return text
+    s = text.split('%')
+    for (i, h) in enumerate(s):
+        if h:
+            res = _hextochr.get(h[:2])
+            if res and res not in exceptions:
+                if len(h) > 2:
+                    s[i] = res + h[2:]
+                else:
+                    s[i] = res
+            elif i != 0:
+                s[i] = '%' + h
+    return ''.join(s)
+
 
 def parse(url):
     """Parse a URL

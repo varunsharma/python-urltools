@@ -2,7 +2,7 @@
 #import pytest
 
 from urltools import parse, extract, encode, split, split_netloc, split_host
-from urltools import normalize, normalize_path, normalize_query, unquote
+from urltools import normalize, normalize_path, normalize_query, unquote2
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
 
 
@@ -137,8 +137,13 @@ def test_normalize_query():
     assert normalize_query("=1&=2&=3") == ""
 
 
-def test_unquote():
-    pass
+def test_unquote2():
+    assert unquote2("%32%35") == "25"
+    assert unquote2("%25%32%35") == "%25"
+    assert unquote2("%25%32%35", ['%']) == "%2525"
+    assert unquote2("foo%25%32%35bar") == "foo%25bar"
+    assert unquote2("foo%23bar") == "foo#bar"
+    assert unquote2("foo%23bar", ['#']) == "foo%23bar"
 
 
 def test_encode():

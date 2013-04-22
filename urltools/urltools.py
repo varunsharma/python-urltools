@@ -29,7 +29,7 @@ from posixpath import normpath
 
 __all__ = ["ParseResult", "SplitResult", "parse", "extract", "split",
            "split_netloc", "split_host", "assemble", "encode", "normalize",
-           "normalize_path", "normalize_query", "unquote2"]
+           "normalize_path", "normalize_query", "unquote2", "normalize_host"]
 
 
 PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
@@ -92,6 +92,7 @@ def normalize(url):
             netloc = tmp[0]
             path = normalize_path('/' + tmp[1])
     username, password, host, port = split_netloc(netloc)
+    host = normalize_host(host)
     port = normalize_port(parts.scheme, port)
     query = normalize_query(parts.query)
     result = ParseResult(parts.scheme, username, password, None, host, None,
@@ -99,12 +100,13 @@ def normalize(url):
     return assemble(result)
 
 
+_idna_encode = lambda x: x.decode('utf-8').encode('idna')
+
 def encode(url):
     """Encode URL
     """
     parts = extract(url)
-    idna = lambda x: x.decode('utf-8').encode('idna')
-    encoded = ParseResult(*(idna(p) for p in parts))
+    encoded = ParseResult(*(_idna_encode(p) for p in parts))
     return assemble(encoded)
 
 
@@ -135,6 +137,15 @@ def assemble(parts):
     if parts.fragment:
         nurl += '#' + parts.fragment
     return nurl
+
+
+_idna_decode = lambda x: x.decode('idna').encode('utf-8')
+
+def normalize_host(host):
+    if 'xn--' not in host:
+        return host
+    parts = host.split('.')
+    return '.'.join([_idna_decode(p) for p in parts])
 
 
 def normalize_port(scheme, port):
@@ -177,6 +188,7 @@ UNQUOTE_EXCEPTIONS = {
     'fragment': ' +%#'
 }
 _hextochr = {'%02x' % i: chr(i) for i in range(256)}
+_hextochr.update({'%02X' % i: chr(i) for i in range(256)})
 
 def unquote2(text, exceptions=[]):
     if '%' not in text:

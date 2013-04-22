@@ -2,7 +2,7 @@
 #import pytest
 
 from urltools import parse, extract, encode, split, split_netloc, split_host
-from urltools import normalize, normalize_path, normalize_query, unquote2
+from urltools import normalize, normalize_path, normalize_query, unquote2, normalize_host
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
 
 
@@ -94,6 +94,9 @@ def test_normalize():
     assert normalize("mailto:foo@example.com") == "mailto:foo@example.com"
     assert normalize("mailto:foo@eXAMPle.cOM") == "mailto:foo@example.com"
 
+    # IDN
+    assert normalize("http://xn--e1afmkfd.xn--p1ai/") == "http://пример.рф/"
+
     # malformed urls
     assert normalize("http://example.com/?foo") == "http://example.com/"
     assert normalize("http://example.com?foo") == "http://example.com/"
@@ -106,6 +109,11 @@ def test_normalize():
     assert normalize("http://example.com/#foo/bar/blub.html?x=1") == "http://example.com/#foo/bar/blub.html?x=1"
     assert normalize("http://example.com/foo#?=bar") == "http://example.com/foo#?=bar"
     assert normalize("http://example.com/foo/bar/http://example.com") == "http://example.com/foo/bar/http:/example.com"
+
+
+def test_normalize_host():
+    assert normalize_host("xn--e1afmkfd.xn--p1ai") == "пример.рф"
+    assert normalize_host("xn--mller-kva.de") == "müller.de"
 
 
 def test_normalize_path():
@@ -144,6 +152,7 @@ def test_unquote2():
     assert unquote2("foo%25%32%35bar") == "foo%25bar"
     assert unquote2("foo%23bar") == "foo#bar"
     assert unquote2("foo%23bar", ['#']) == "foo%23bar"
+    assert unquote2("%2e%2E") == ".."
 
 
 def test_encode():

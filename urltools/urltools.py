@@ -182,17 +182,17 @@ def unquote2(text, exceptions=[]):
     if '%' not in text:
         return text
     s = text.split('%')
-    for (i, h) in enumerate(s):
-        if h:
-            res = _hextochr.get(h[:2])
-            if res and res not in exceptions:
-                if len(h) > 2:
-                    s[i] = res + h[2:]
-                else:
-                    s[i] = res
-            elif i != 0:
-                s[i] = '%' + h
-    return ''.join(s)
+    res = [s[0]]
+    for h in s[1:]:
+        c = _hextochr.get(h[:2])
+        if c and c not in exceptions:
+            if len(h) > 2:
+                res.append(c + h[2:])
+            else:
+                res.append(c)
+        else:
+            res.append('%' + h)
+    return ''.join(res)
 
 
 def parse(url):

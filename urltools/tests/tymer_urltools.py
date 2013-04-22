@@ -4,11 +4,10 @@ from tymer import t, skip
 
 
 setup_tymer = """
-import tldextract, posixpath
-from urlparse import urlparse
+import tldextract, posixpath, urlparse
 
 from urltools.urltools import assemble, parse, extract, encode, split, split_netloc
-from urltools.urltools import normalize, normalize_path, normalize_query
+from urltools.urltools import normalize, normalize_path, normalize_query, unquote2
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
 """
 
@@ -33,10 +32,15 @@ def tymer_normalize_query():
     t('normalize_query("x=1&y=&z=3")')
 
 @skip
+def tymer_unquote2():
+    t('unquote2("%25%32%35")')
+    t('urlparse.unquote("%25%32%35")')
+
+@skip
 def tymer_parse():
     t('parse("http://example.com")')
     t('extract("http://example.com")')
-    t('urlparse("http://example.com")')
+    t('urlparse.urlparse("http://example.com")')
     t('tldextract.extract("http://example.com")')
 
 @skip

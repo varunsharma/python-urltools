@@ -29,7 +29,7 @@ from posixpath import normpath
 
 __all__ = ["ParseResult", "SplitResult", "parse", "extract", "split",
            "split_netloc", "split_host", "assemble", "encode", "normalize",
-           "normalize_path", "normalize_query"]
+           "normalize_path", "normalize_query", "unquote"]
 
 
 PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
@@ -75,24 +75,28 @@ ParseResult = namedtuple('ParseResult', ['scheme', 'username', 'password',
 def normalize(url):
     """Normalize a URL
     """
+    if url == '':
+        return ''
     parts = split(url.strip())
     if parts.scheme:
         netloc = parts.netloc
-        path = parts.path
+        if parts.scheme in SCHEMES:
+            path = normalize_path(parts.path)
+        else:
+            path = parts.path
     else:
         netloc = parts.path
         path = ''
         if '/' in netloc:
             tmp = netloc.split('/', 1)
             netloc = tmp[0]
-            path = '/' + tmp[1]
+            path = normalize_path('/' + tmp[1])
     username, password, host, port = split_netloc(netloc)
     port = normalize_port(parts.scheme, port)
-    path = normalize_path(path)
     query = normalize_query(parts.query)
-    parts = ParseResult(parts.scheme, username, password, None, host, None,
-                        port, path, query, parts.fragment)
-    return assemble(parts, default_path='/')
+    result = ParseResult(parts.scheme, username, password, None, host, None,
+                         port, path, query, parts.fragment)
+    return assemble(result)
 
 
 def encode(url):
@@ -104,7 +108,7 @@ def encode(url):
     return assemble(encoded)
 
 
-def assemble(parts, default_path=''):
+def assemble(parts):
     """Assemble a URL from the result returned by extract() or parse()
     """
     nurl = ''
@@ -126,8 +130,6 @@ def assemble(parts, default_path=''):
         nurl += ':' + parts.port
     if parts.path:
         nurl += parts.path
-    elif parts.scheme in SCHEMES:
-        nurl += default_path
     if parts.query:
         nurl += '?' + parts.query
     if parts.fragment:
@@ -145,11 +147,12 @@ def normalize_port(scheme, port):
 def normalize_path(path):
     """Normalize path (collapse etc.)
     """
-    if path == '':
-        return ''
-    if path in ['//', '/']:
+    if path in ['//', '/' ,'']:
         return '/'
-    return normpath(unquote(path))
+    npath = normpath(unquote(path))
+    if path[-1] == '/' and npath != '/':
+        npath += '/'
+    return npath
 
 
 def normalize_query(query):
@@ -167,6 +170,15 @@ def normalize_query(query):
     nparams.sort()
     return '&'.join(nparams)
 
+UNQUOTE_EXCEPTIONS = {
+    'path': ' /?;%+#',
+    'query': ' ?&=+%#',
+    'fragment': ' +%#'
+}
+
+#def unquote(data, exceptions=[]):
+#    if '%' not in data:
+#        return data
 
 def parse(url):
     """Parse a URL

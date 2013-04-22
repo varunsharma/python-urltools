@@ -2,7 +2,7 @@
 #import pytest
 
 from urltools import parse, extract, encode, split, split_netloc, split_host
-from urltools import normalize, normalize_path, normalize_query
+from urltools import normalize, normalize_path, normalize_query, unquote
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
 
 
@@ -45,12 +45,20 @@ def test_normalize():
     # path
     assert normalize("http://example.com/a") == "http://example.com/a"
     assert normalize("http://example.com/a/b/c") == "http://example.com/a/b/c"
-    assert normalize("http://example.com/foo/") == "http://example.com/foo"
+    assert normalize("http://example.com/foo/") == "http://example.com/foo/"
     assert normalize("http://example.com/a/./b/././c") == "http://example.com/a/b/c"
     assert normalize("http://example.com/a/../b") == "http://example.com/b"
+    assert normalize("http://example.com/./b") == "http://example.com/b"
+    assert normalize("http://example.com/../b") == "http://example.com/b"
     assert normalize("http://example.com/////////foo") == "http://example.com/foo"
     assert normalize("http://example.com/foo/.../bar") == "http://example.com/foo/.../bar"
     assert normalize("http://example.com/foo+bar") == "http://example.com/foo+bar"
+    assert normalize("http://example.com/.") == "http://example.com/"
+    assert normalize("http://example.com/..") == "http://example.com/"
+    assert normalize("http://example.com/./") == "http://example.com/"
+    assert normalize("http://example.com/../") == "http://example.com/"
+    assert normalize("http://example.com/a/..") == "http://example.com/"
+    assert normalize("http://example.com/a/../") == "http://example.com/"
 
     # encoded path
     assert normalize("http://example.com/%25%32%35") == "http://example.com/%25"
@@ -63,7 +71,7 @@ def test_normalize():
     assert normalize("http://example.com/?x=1") == "http://example.com/?x=1"
     assert normalize("http://example.com?x=1") == "http://example.com/?x=1"
     assert normalize("http://example.com/a?x=1") == "http://example.com/a?x=1"
-    assert normalize("http://example.com/a/?x=1") == "http://example.com/a?x=1"
+    assert normalize("http://example.com/a/?x=1") == "http://example.com/a/?x=1"
     assert normalize("http://example.com/a?x=1&y=2") == "http://example.com/a?x=1&y=2"
     assert normalize("http://example.com/a?y=2&x=1") == "http://example.com/a?x=1&y=2"
     assert normalize("http://example.com/a?x=&y=2") == "http://example.com/a?y=2"
@@ -93,7 +101,7 @@ def test_normalize():
     assert normalize("http://example.com?") == "http://example.com/"
     assert normalize("http://example.com/?") == "http://example.com/"
     assert normalize("http://example.com//?") == "http://example.com/"
-    assert normalize("http://example.com/foo/?http://example.com/bar/?x=http://examle.com/y/z") == "http://example.com/foo?http://example.com/bar/?x=http://examle.com/y/z"
+    assert normalize("http://example.com/foo/?http://example.com/bar/?x=http://examle.com/y/z") == "http://example.com/foo/?http://example.com/bar/?x=http://examle.com/y/z"
     assert normalize("http://example.com/#foo?bar") == "http://example.com/#foo?bar"
     assert normalize("http://example.com/#foo/bar/blub.html?x=1") == "http://example.com/#foo/bar/blub.html?x=1"
     assert normalize("http://example.com/foo#?=bar") == "http://example.com/foo#?=bar"
@@ -101,12 +109,17 @@ def test_normalize():
 
 
 def test_normalize_path():
+    assert normalize_path("") == "/"
     assert normalize_path("/") == "/"
     assert normalize_path("/a") == "/a"
     assert normalize_path("a") == "a"
     assert normalize_path("/a/b") == "/a/b"
-    assert normalize_path("/a/b/") == "/a/b"
+    assert normalize_path("/a/b/") == "/a/b/"
     assert normalize_path("/a/b/c") == "/a/b/c"
+    assert normalize_path("/.") == "/"
+    assert normalize_path("/..") == "/"
+    assert normalize_path("/./") == "/"
+    assert normalize_path("/../") == "/"
     assert normalize_path("/a/./b/././c") == "/a/b/c"
     assert normalize_path("/a/../b") == "/b"
     assert normalize_path("/a/b/../../c") == "/c"
@@ -122,6 +135,10 @@ def test_normalize_query():
     assert normalize_query("x=1&y=&z=3") == "x=1&z=3"
     assert normalize_query("x=&y=&z=") == ""
     assert normalize_query("=1&=2&=3") == ""
+
+
+def test_unquote():
+    pass
 
 
 def test_encode():

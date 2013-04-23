@@ -15,10 +15,10 @@ Rules that are applied to normalize a URL:
 
 * tolower scheme
 * tolower host (also works with IDNs)
-* remove HTTP default port (80)
+* remove default port
 * remove ':' without port
 * remove DNS root label
-* unquote path
+* unquote path, query, fragment
 * collapse path (remove '//', '/./', '/../')
 * sort query params and remove params without value
 
@@ -44,9 +44,6 @@ If the `scheme` is missing `parse` interprets the URL as relative.
     ParseResult(scheme='', username='', password='', subdomain='www', domain='example', tld='co.uk', port='', path='/abc', query='', fragment='')
 
 
-
-
-
 ### Additional functions
 
 Besides the already described main functions `urltools` has some more functions to manipulate segments of a URL.
@@ -56,6 +53,9 @@ Besides the already described main functions `urltools` has some more functions 
         >>> urltools.encode("http://müller.de")
         'http://xn--mller-kva.de/'
 
+* `assemble` a new URL from a `ParseResult`
+* `normalize_host`
+* `normalize_port`
 * `normalize_path`
 
         >>> normalize_path("/a/b/../../c")
@@ -66,8 +66,8 @@ Besides the already described main functions `urltools` has some more functions 
         >>> normalize_query("x=1&y=&z=3")
         'x=1&z=3'
 
-* `assemble` a new URL from a `ParseResult`
-
+* `normalize_fragment`
+* `unquote`
 * `split` (basically the same as `urlparse.urlparse`)
 
         >>> split("http://www.example.com/abc?x=1&y=2#foo")

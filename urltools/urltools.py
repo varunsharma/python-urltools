@@ -121,7 +121,7 @@ def encode(url):
 
 
 def assemble(parts):
-    """Assemble a URL from the result returned by extract() or parse()
+    """Assemble a ParseResult to a new URL
     """
     nurl = ''
     if parts.scheme:
@@ -150,6 +150,8 @@ def assemble(parts):
 
 
 def normalize_host(host):
+    """Normalize host (decode IDNA)
+    """
     if 'xn--' not in host:
         return host
     parts = host.split('.')
@@ -157,6 +159,8 @@ def normalize_host(host):
 
 
 def normalize_port(scheme, port):
+    """Check if the port is default port
+    """
     if not scheme:
         return port
     if port and port != DEFAULT_PORT[scheme]:
@@ -192,10 +196,14 @@ def normalize_query(query):
 
 
 def normalize_fragment(fragment):
+    """Normalize fragment (unquote with exceptions only)
+    """
     return unquote(fragment, UNQUOTE_EXCEPTIONS['fragment'])
 
 
 def unquote(text, exceptions=[]):
+    """Unquote a text but ignore the exceptions
+    """
     if '%' not in text:
         return text
     s = text.split('%')

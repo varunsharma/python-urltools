@@ -22,14 +22,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 import os
 import re
 import urllib
-from urlparse import unquote
 from collections import namedtuple
 from posixpath import normpath
 
 
 __all__ = ["ParseResult", "SplitResult", "parse", "extract", "split",
            "split_netloc", "split_host", "assemble", "encode", "normalize",
-           "normalize_path", "normalize_query", "unquote2", "normalize_host"]
+           "normalize_host", "normalize_path", "normalize_query",
+           "normalize_fragment", "unquote"]
 
 
 PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
@@ -62,8 +62,19 @@ DEFAULT_PORT = {
     'https': '443',
     'ws': '80',
     'wss': '443',
-    'ftp': '21'
+    'ftp': '21',
+    'sftp': '22'
 }
+UNQUOTE_EXCEPTIONS = {
+    'path': ' /?+#',
+    'query': ' ?&=+#',
+    'fragment': ' +#'
+}
+
+_hextochr = {'%02x' % i: chr(i) for i in range(256)}
+_hextochr.update({'%02X' % i: chr(i) for i in range(256)})
+_idna_encode = lambda x: x.decode('utf-8').encode('idna')
+_idna_decode = lambda x: x.decode('idna').encode('utf-8')
 
 SplitResult = namedtuple('SplitResult', ['scheme', 'netloc', 'path', 'query',
                                          'fragment'])
@@ -95,12 +106,11 @@ def normalize(url):
     host = normalize_host(host)
     port = normalize_port(parts.scheme, port)
     query = normalize_query(parts.query)
+    fragment = normalize_fragment(parts.fragment)
     result = ParseResult(parts.scheme, username, password, None, host, None,
-                         port, path, query, parts.fragment)
+                         port, path, query, fragment)
     return assemble(result)
 
-
-_idna_encode = lambda x: x.decode('utf-8').encode('idna')
 
 def encode(url):
     """Encode URL
@@ -139,8 +149,6 @@ def assemble(parts):
     return nurl
 
 
-_idna_decode = lambda x: x.decode('idna').encode('utf-8')
-
 def normalize_host(host):
     if 'xn--' not in host:
         return host
@@ -160,7 +168,7 @@ def normalize_path(path):
     """
     if path in ['//', '/' ,'']:
         return '/'
-    npath = normpath(unquote(path))
+    npath = normpath(unquote(path, exceptions=UNQUOTE_EXCEPTIONS['path']))
     if path[-1] == '/' and npath != '/':
         npath += '/'
     return npath
@@ -171,7 +179,8 @@ def normalize_query(query):
     """
     if query == '' or len(query) <= 2:
         return ''
-    params = query.split('&')
+    nquery = unquote(query, exceptions=UNQUOTE_EXCEPTIONS['query'])
+    params = nquery.split('&')
     nparams = []
     for param in params:
         if '=' in param:
@@ -182,15 +191,11 @@ def normalize_query(query):
     return '&'.join(nparams)
 
 
-UNQUOTE_EXCEPTIONS = {
-    'path': ' /?;%+#',
-    'query': ' ?&=+%#',
-    'fragment': ' +%#'
-}
-_hextochr = {'%02x' % i: chr(i) for i in range(256)}
-_hextochr.update({'%02X' % i: chr(i) for i in range(256)})
+def normalize_fragment(fragment):
+    return unquote(fragment, UNQUOTE_EXCEPTIONS['fragment'])
 
-def unquote2(text, exceptions=[]):
+
+def unquote(text, exceptions=[]):
     if '%' not in text:
         return text
     s = text.split('%')

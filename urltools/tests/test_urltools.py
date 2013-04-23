@@ -2,7 +2,7 @@
 #import pytest
 
 from urltools import parse, extract, encode, split, split_netloc, split_host
-from urltools import normalize, normalize_path, normalize_query, unquote2, normalize_host
+from urltools import normalize, normalize_path, normalize_query, unquote, normalize_host, normalize_fragment
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
 
 
@@ -64,6 +64,7 @@ def test_normalize():
     assert normalize("http://example.com/%25%32%35") == "http://example.com/%25"
     assert normalize("http://example.com/foo%25%32%35bar") == "http://example.com/foo%25bar"
     assert normalize("http://example.com/foo/%25%32%35/bar") == "http://example.com/foo/%25/bar"
+    assert normalize("http://example.com/%7Efoo") == "http://example.com/~foo"
     # %23 = #
     #assert normalize("http://example.com/foo%23bar") == "http://example.com/foo%23bar"
 
@@ -145,14 +146,19 @@ def test_normalize_query():
     assert normalize_query("=1&=2&=3") == ""
 
 
-def test_unquote2():
-    assert unquote2("%32%35") == "25"
-    assert unquote2("%25%32%35") == "%25"
-    assert unquote2("%25%32%35", ['%']) == "%2525"
-    assert unquote2("foo%25%32%35bar") == "foo%25bar"
-    assert unquote2("foo%23bar") == "foo#bar"
-    assert unquote2("foo%23bar", ['#']) == "foo%23bar"
-    assert unquote2("%2e%2E") == ".."
+def test_normalize_fragment():
+    assert normalize_fragment("foo%25%32%35bar") == "foo%25bar"
+    assert normalize_fragment("foo%23bar") == "foo%23bar"
+
+
+def test_unquote():
+    assert unquote("%32%35") == "25"
+    assert unquote("%25%32%35") == "%25"
+    assert unquote("%25%32%35", ['%']) == "%2525"
+    assert unquote("foo%25%32%35bar") == "foo%25bar"
+    assert unquote("foo%23bar") == "foo#bar"
+    assert unquote("foo%23bar", ['#']) == "foo%23bar"
+    assert unquote("%2e%2E") == ".."
 
 
 def test_encode():

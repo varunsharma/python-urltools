@@ -330,6 +330,8 @@ def split_netloc(netloc):
 def split_host(host):
     """Use the Public Suffix List to split host into subdomain, domain and tld
     """
+    if '[' in host:
+        return '', host, ''
     domain = subdomain = tld = ''
     for c in host:
         if c not in IP_CHARS:

@@ -191,6 +191,9 @@ def test_parse():
 
     assert parse("mailto:foo@bar.com") == ('mailto', 'foo', '', '', 'bar', 'com', '', '', '', '')
 
+    assert parse("http://[::1]/foo/bar") == ('http', '', '', '', '[::1]', '', '', '/foo/bar', '', '')
+    assert parse("[::1]/foo/bar") == ('', '', '', '', '', '', '', '[::1]/foo/bar', '', '')
+
 
 def test_extract():
     assert extract("http://example.com") == ('http', '', '', '', 'example', 'com', '', '', '', '')
@@ -213,6 +216,9 @@ def test_extract():
     assert extract("http://إختبار.مصر/") == ('http', '', '', '', 'إختبار', 'مصر', '', '/', '', '')
 
     assert extract("mailto:foo@bar.com") == ('mailto', 'foo', '', '', 'bar', 'com', '', '', '', '')
+
+    assert extract("http://[::1]/foo/bar") == ('http', '', '', '', '[::1]', '', '', '/foo/bar', '', '')
+    assert extract("[::1]/foo/bar") == ('', '', '', '', '[::1]', '', '', '/foo/bar', '', '')
 
 
 def test_clean_netloc():
@@ -284,6 +290,7 @@ def test_split_netloc():
     assert split_netloc("localhost:8080") == ('', '', 'localhost', '8080')
     assert split_netloc("[::1]") == ('', '', '[::1]', '')
     assert split_netloc("[::1]:8080") == ('', '', '[::1]', '8080')
+    assert split_netloc("foo:bar@[::1]:8080") == ('foo', 'bar', '[::1]', '8080')
 
 
 def test_split_host():
@@ -299,3 +306,6 @@ def test_split_host():
 
     assert split_host("例子.中国") == ('', '例子', '中国')
     assert split_host("உதாரணம்.இந்தியா") == ('', 'உதாரணம்', 'இந்தியா')
+
+    assert split_host("192.168.1.1") == ('', '192.168.1.1', '')
+    assert split_host("[::1]") == ('', '[::1]', '')

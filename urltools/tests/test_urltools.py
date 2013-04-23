@@ -42,6 +42,12 @@ def test_normalize():
     assert normalize("192.168.1.1") == "192.168.1.1"
     assert normalize("192.168.1.1:8080/foo/bar") == "192.168.1.1:8080/foo/bar"
 
+    # ip6
+    assert normalize("[::1]") == "[::1]"
+    assert normalize("http://[::1]") == "http://[::1]/"
+    assert normalize("[::1]:8080") == "[::1]:8080"
+    assert normalize("http://[::1]:8080") == "http://[::1]:8080/"
+
     # path
     assert normalize("http://example.com/a") == "http://example.com/a"
     assert normalize("http://example.com/a/b/c") == "http://example.com/a/b/c"
@@ -255,6 +261,11 @@ def test_split():
     assert split("http://192.168.1.1:8080/") == ('http', '192.168.1.1:8080', '/', '', '')
     assert split("192.168.1.1") == ('', '', '192.168.1.1', '', '')
 
+    assert split("http://[::1]/") == ('http', '[::1]', '/', '', '')
+    assert split("http://[::1]:8080/") == ('http', '[::1]:8080', '/', '', '')
+    assert split("[::1]") == ('', '', '[::1]', '', '')
+    assert split("[::1]:8080") == ('', '', '[::1]:8080', '', '')
+
 
 def test_split_netloc():
     assert split_netloc("example") == ('', '', 'example', '')
@@ -270,6 +281,10 @@ def test_split_netloc():
 
     assert split_netloc("192.168.1.1") == ('', '', '192.168.1.1', '')
     assert split_netloc("192.168.1.1:8080") == ('', '', '192.168.1.1', '8080')
+
+    assert split_netloc("localhost:8080") == ('', '', 'localhost', '8080')
+    assert split_netloc("[::1]") == ('', '', '[::1]', '')
+    assert split_netloc("[::1]:8080") == ('', '', '[::1]', '8080')
 
 
 def test_split_host():

@@ -67,7 +67,7 @@ DEFAULT_PORT = {
 }
 UNQUOTE_EXCEPTIONS = {
     'path': ' /?+#',
-    'query': ' ?&=+#',
+    'query': ' &=+#',
     'fragment': ' +#'
 }
 
@@ -249,7 +249,10 @@ def split(url):
     """Split URL into scheme, netloc, path, query and fragment
     """
     scheme = netloc = path = query = fragment = ''
+    ip6_start = url.find('[')
     scheme_end = url.find(':')
+    if ip6_start > 0 and ip6_start < scheme_end:
+        scheme_end = -1
     if scheme_end > 0:
         for c in url[:scheme_end]:
             if c not in SCHEME_CHARS:
@@ -309,10 +312,8 @@ def split_netloc(netloc):
         else:
             username = user_pw
     netloc = _clean_netloc(netloc)
-    if '.' not in netloc:
-        return username, password, netloc, ''
-    if ':' in netloc:
-        host, port = netloc.split(':')
+    if ':' in netloc and netloc[-1] != ']':
+        host, port = netloc.rsplit(':', 1)
     else:
         host = netloc
     return username, password, host, port

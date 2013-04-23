@@ -7,7 +7,7 @@ setup_tymer = """
 import tldextract, posixpath, urlparse
 
 from urltools.urltools import assemble, parse, extract, encode, split, split_netloc
-from urltools.urltools import normalize, normalize_path, normalize_query, unquote2
+from urltools.urltools import normalize, normalize_path, normalize_query, unquote
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
 """
 
@@ -32,8 +32,8 @@ def tymer_normalize_query():
     t('normalize_query("x=1&y=&z=3")')
 
 @skip
-def tymer_unquote2():
-    t('unquote2("%25%32%35")')
+def tymer_unquote():
+    t('unquote("%25%32%35")')
     t('urlparse.unquote("%25%32%35")')
 
 @skip

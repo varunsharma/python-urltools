@@ -71,8 +71,7 @@ def test_normalize():
     assert normalize("http://example.com/foo%25%32%35bar") == "http://example.com/foo%25bar"
     assert normalize("http://example.com/foo/%25%32%35/bar") == "http://example.com/foo/%25/bar"
     assert normalize("http://example.com/%7Efoo") == "http://example.com/~foo"
-    # %23 = #
-    #assert normalize("http://example.com/foo%23bar") == "http://example.com/foo%23bar"
+    assert normalize("http://example.com/foo%23bar") == "http://example.com/foo%23bar" # %23 = #
 
     # query
     assert normalize("http://example.com/?x=1") == "http://example.com/?x=1"

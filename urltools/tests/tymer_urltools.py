@@ -45,7 +45,7 @@ def tymer_parse():
 
 @skip
 def tymer_split():
-    t('urlparse("http://example.com")')
+    t('urlparse.urlparse("http://example.com")')
     t('split("http://example.com")')
 
 @skip

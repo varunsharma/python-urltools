@@ -306,7 +306,12 @@ def split(url):
 def _clean_netloc(netloc):
     """Remove trailing '.' and ':' and tolower
     """
-    return netloc.rstrip('.:').decode('utf-8').lower().encode('utf-8')
+    try:
+        netloc.encode('ascii')
+    except:
+        return netloc.rstrip('.:').decode('utf-8').lower().encode('utf-8')
+    else:
+        return netloc.rstrip('.:').lower()
 
 
 def split_netloc(netloc):

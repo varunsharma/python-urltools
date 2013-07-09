@@ -11,6 +11,7 @@ def test_get_public_suffix_list():
     psl = _get_public_suffix_list()
     assert "de" in psl
     assert len(psl) > 6000
+    assert "" not in psl
 
 
 def test_normalize():
@@ -181,10 +182,17 @@ def test_parse():
     assert parse("http://example.co.uk") == ('http', '', '', '', 'example', 'co.uk', '', '', '', '')
     assert parse("http://example.com/foo/") == ('http', '', '', '', 'example', 'com', '', '/foo/', '', '')
     assert parse("http://foo:bar@www.example.com:1234/foo/?x=1#bla") == ('http', 'foo', 'bar', 'www', 'example', 'com', '1234', '/foo/', 'x=1', 'bla')
+    assert parse("http://example.com?foo=bar:blub") == ('http', '', '', '', 'example', 'com', '', '', 'foo=bar:blub', '')
+    assert parse("http://example.com?foo=bar:blub/") == ('http', '', '', '', 'example', 'com', '', '', 'foo=bar:blub/', '')
+
 
     assert parse("example.com.") == ('', '', '', '', '', '', '', 'example.com.', '', '')
     assert parse("example.com/abc") == ('', '', '', '', '', '', '', 'example.com/abc', '', '')
     assert parse("www.example.com") == ('', '', '', '', '', '', '', 'www.example.com', '', '')
+    assert parse("www.example.com/?x=1") == ('', '', '', '', '', '', '', 'www.example.com/', 'x=1', '')
+    assert parse("www.example.com?x=1") == ('', '', '', '', '', '', '', 'www.example.com', 'x=1', '')
+    assert parse("www.example.com/#foo") == ('', '', '', '', '', '', '', 'www.example.com/', '', 'foo')
+    assert parse("www.example.com#foo") == ('', '', '', '', '', '', '', 'www.example.com', '', 'foo')
 
     assert parse("http://пример.рф") == ('http', '', '', '', 'пример', 'рф', '', '', '', '')
     assert parse("http://إختبار.مصر/") == ('http', '', '', '', 'إختبار', 'مصر', '', '/', '', '')
@@ -203,6 +211,8 @@ def test_extract():
     assert extract("http://example.co.uk/") == ('http', '', '', '', 'example', 'co.uk', '', '/', '', '')
     assert extract("http://foo.bar.example.co.uk") == ('http', '', '', 'foo.bar', 'example', 'co.uk', '', '', '', '')
     assert extract("http://foo:bar@www.example.com:1234/foo/?x=1#bla") == ('http', 'foo', 'bar', 'www', 'example', 'com', '1234', '/foo/', 'x=1', 'bla')
+    assert extract("http://example.com?foo=bar:blub") == ('http', '', '', '', 'example', 'com', '', '', 'foo=bar:blub', '')
+    assert extract("http://example.com?foo=bar:blub/") == ('http', '', '', '', 'example', 'com', '', '', 'foo=bar:blub/', '')
 
     assert extract("example.com.") == ('', '', '', '', 'example', 'com', '', '', '', '')
     assert extract("example.com/abc") == ('', '', '', '', 'example', 'com', '', '/abc', '', '')
@@ -211,6 +221,10 @@ def test_extract():
     assert extract("example.com:8080") == ('', '', '', '', 'example', 'com', '8080', '', '', '')
     assert extract("example.com:8080/") == ('', '', '', '', 'example', 'com', '8080', '/', '', '')
     assert extract("example.com:8080/abc") == ('', '', '', '', 'example', 'com', '8080', '/abc', '', '')
+    assert extract("www.example.com/?x=1") == ('', '', '', 'www', 'example', 'com', '', '/', 'x=1', '')
+    assert extract("www.example.com?x=1") == ('', '', '', 'www', 'example', 'com', '', '', 'x=1', '')
+    assert extract("www.example.com/#foo") == ('', '', '', 'www', 'example', 'com', '', '/', '', 'foo')
+    assert extract("www.example.com#foo") == ('', '', '', 'www', 'example', 'com', '', '', '', 'foo')
 
     assert extract("http://пример.рф") == ('http', '', '', '', 'пример', 'рф', '', '', '', '')
     assert extract("http://إختبار.مصر/") == ('http', '', '', '', 'إختبار', 'مصر', '', '/', '', '')
@@ -259,6 +273,8 @@ def test_split():
 
     assert split("http://example.com?foo") == ('http', 'example.com', '', 'foo', '')
     assert split("http://example.com/?foo") == ('http', 'example.com', '/', 'foo', '')
+    assert split("http://example.com/#foo") == ('http', 'example.com', '/', '', 'foo')
+    assert split("http://example.com#foo") == ('http', 'example.com', '', '', 'foo')
     assert split("http://example.com?foo#bar") == ('http', 'example.com', '', 'foo', 'bar')
     assert split("http://example.com/#foo?bar") == ('http', 'example.com', '/', '', 'foo?bar')
 

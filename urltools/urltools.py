@@ -274,14 +274,21 @@ def split(url):
     l_query = rest.find('?')
     l_frag = rest.find('#')
     if l_path > 0:
-        netloc = rest[:l_path]
         if l_query > 0 and l_frag > 0:
+            netloc = rest[:l_path]
             path = rest[l_path:min(l_query, l_frag)]
         elif l_query > 0:
-            path = rest[l_path:l_query]
+            if l_query > l_path:
+                netloc = rest[:l_path]
+                path = rest[l_path:l_query]
+            else:
+                netloc = rest[:l_query]
+                path = ''
         elif l_frag > 0:
+            netloc = rest[:l_path]
             path = rest[l_path:l_frag]
         else:
+            netloc = rest[:l_path]
             path = rest[l_path:]
     else:
         if l_query > 0:

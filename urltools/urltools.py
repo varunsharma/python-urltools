@@ -355,14 +355,14 @@ def split_host(host):
         tld = '.'.join(parts[i:])
         wildcard_tld = '*.' + tld
         exception_tld = '!' + tld
+        if exception_tld in PSL:
+            domain = '.'.join(parts[:i+1])
+            tld = '.'.join(parts[i+1:])
+            break
         if tld in PSL:
             domain = '.'.join(parts[:i])
             break
         if wildcard_tld in PSL:
-            domain = '.'.join(parts[:i-1])
-            tld = '.'.join(parts[i-1:])
-            break
-        if exception_tld in PSL:
             domain = '.'.join(parts[:i-1])
             tld = '.'.join(parts[i-1:])
             break

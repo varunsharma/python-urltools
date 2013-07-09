@@ -185,7 +185,6 @@ def test_parse():
     assert parse("http://example.com?foo=bar:blub") == ('http', '', '', '', 'example', 'com', '', '', 'foo=bar:blub', '')
     assert parse("http://example.com?foo=bar:blub/") == ('http', '', '', '', 'example', 'com', '', '', 'foo=bar:blub/', '')
 
-
     assert parse("example.com.") == ('', '', '', '', '', '', '', 'example.com.', '', '')
     assert parse("example.com/abc") == ('', '', '', '', '', '', '', 'example.com/abc', '', '')
     assert parse("www.example.com") == ('', '', '', '', '', '', '', 'www.example.com', '', '')
@@ -317,6 +316,12 @@ def test_split_host():
 
     assert split_host("example.jp") == ('', 'example', 'jp')
     assert split_host("foo.kyoto.jp") == ('', 'foo', 'kyoto.jp')
+
+    assert split_host("foo.co.uk") == ('', 'foo', 'co.uk')
+    assert split_host("foo.co.sch.uk") == ('', 'foo', 'co.sch.uk')
+    assert split_host("foo.bar.co.uk") == ('foo', 'bar', 'co.uk')
+    assert split_host("parliament.uk") == ('', 'parliament', 'uk')
+    assert split_host("foo.parliament.uk") == ('foo', 'parliament', 'uk')
 
     assert split_host("example.gs.aa.no") == ('', 'example', 'gs.aa.no')
 

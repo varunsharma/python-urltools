@@ -1,5 +1,5 @@
 """
-Copyright (c) 2013 Roderick Baier
+Copyright (c) 2013,2014 Roderick Baier
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -26,17 +26,18 @@ from collections import namedtuple
 from posixpath import normpath
 
 
-__all__ = ["ParseResult", "SplitResult", "parse", "extract", "split",
-           "split_netloc", "split_host", "assemble", "encode", "normalize",
-           "normalize_host", "normalize_path", "normalize_query",
-           "normalize_fragment", "unquote"]
+__version__ = '0.1.14'
+
+__all__ = ['ParseResult', 'SplitResult', 'parse', 'extract', 'split',
+           'split_netloc', 'split_host', 'assemble', 'encode', 'normalize',
+           'normalize_host', 'normalize_path', 'normalize_query',
+           'normalize_fragment', 'unquote']
 
 
 PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
 
 def _get_public_suffix_list():
-    """Get the public suffix list.
-    """
+    """Get the public suffix list"""
     local_psl = os.environ.get('PUBLIC_SUFFIX_LIST')
     if local_psl:
         psl_raw = open(local_psl).readlines()
@@ -71,10 +72,7 @@ UNQUOTE_EXCEPTIONS = {
     'fragment': ' +#'
 }
 
-_hextochr = {'%02x' % i: chr(i) for i in range(256)}
-_hextochr.update({'%02X' % i: chr(i) for i in range(256)})
-_idna_encode = lambda x: x.decode('utf-8').encode('idna')
-_idna_decode = lambda x: x.decode('idna').encode('utf-8')
+
 
 SplitResult = namedtuple('SplitResult', ['scheme', 'netloc', 'path', 'query',
                                          'fragment'])
@@ -83,9 +81,20 @@ ParseResult = namedtuple('ParseResult', ['scheme', 'username', 'password',
                                          'path', 'query', 'fragment'])
 
 
+_hextochr = {'%02x' % i: chr(i) for i in range(256)}
+_hextochr.update({'%02X' % i: chr(i) for i in range(256)})
+
+
+def _idna_encode(x):
+    return x.decode('utf-8').encode('idna')
+
+
+def _idna_decode(x):
+    return x.decode('idna').encode('utf-8')
+
+
 def normalize(url):
-    """Normalize a URL
-    """
+    """Normalize a URL"""
     if url == '':
         return ''
     parts = split(url.strip())
@@ -113,16 +122,14 @@ def normalize(url):
 
 
 def encode(url):
-    """Encode URL
-    """
+    """Encode URL"""
     parts = extract(url)
     encoded = ParseResult(*(_idna_encode(p) for p in parts))
     return assemble(encoded)
 
 
 def assemble(parts):
-    """Assemble a ParseResult to a new URL
-    """
+    """Assemble a ParseResult to a new URL"""
     nurl = ''
     if parts.scheme:
         if parts.scheme in SCHEMES:
@@ -150,8 +157,7 @@ def assemble(parts):
 
 
 def normalize_host(host):
-    """Normalize host (decode IDNA)
-    """
+    """Normalize host (decode IDNA)"""
     if 'xn--' not in host:
         return host
     parts = host.split('.')
@@ -159,8 +165,7 @@ def normalize_host(host):
 
 
 def normalize_port(scheme, port):
-    """Check if the port is default port
-    """
+    """Check if the port is default port"""
     if not scheme:
         return port
     if port and port != DEFAULT_PORT[scheme]:
@@ -168,8 +173,7 @@ def normalize_port(scheme, port):
 
 
 def normalize_path(path):
-    """Normalize path (collapse etc.)
-    """
+    """Normalize path (collapse etc.)"""
     if path in ['//', '/' ,'']:
         return '/'
     npath = normpath(unquote(path, exceptions=UNQUOTE_EXCEPTIONS['path']))
@@ -179,8 +183,7 @@ def normalize_path(path):
 
 
 def normalize_query(query):
-    """Normalize query (sort params by name, remove params without value)
-    """
+    """Normalize query (sort params by name, remove params without value)"""
     if query == '' or len(query) <= 2:
         return ''
     nquery = unquote(query, exceptions=UNQUOTE_EXCEPTIONS['query'])
@@ -196,14 +199,12 @@ def normalize_query(query):
 
 
 def normalize_fragment(fragment):
-    """Normalize fragment (unquote with exceptions only)
-    """
+    """Normalize fragment (unquote with exceptions only)"""
     return unquote(fragment, UNQUOTE_EXCEPTIONS['fragment'])
 
 
 def unquote(text, exceptions=[]):
-    """Unquote a text but ignore the exceptions
-    """
+    """Unquote a text but ignore the exceptions"""
     if '%' not in text:
         return text
     s = text.split('%')
@@ -221,8 +222,7 @@ def unquote(text, exceptions=[]):
 
 
 def parse(url):
-    """Parse a URL
-    """
+    """Parse a URL"""
     parts = split(url)
     if parts.scheme:
         (username, password, host, port) = split_netloc(parts.netloc)
@@ -234,8 +234,7 @@ def parse(url):
 
 
 def extract(url):
-    """Extract as much information from a (relative) URL as possible
-    """
+    """Extract as much information from a (relative) URL as possible"""
     parts = split(url)
     if parts.scheme:
         netloc = parts.netloc
@@ -254,8 +253,7 @@ def extract(url):
 
 
 def split(url):
-    """Split URL into scheme, netloc, path, query and fragment
-    """
+    """Split URL into scheme, netloc, path, query and fragment"""
     scheme = netloc = path = query = fragment = ''
     ip6_start = url.find('[')
     scheme_end = url.find(':')
@@ -311,8 +309,7 @@ def split(url):
 
 
 def _clean_netloc(netloc):
-    """Remove trailing '.' and ':' and tolower
-    """
+    """Remove trailing '.' and ':' and tolower"""
     try:
         netloc.encode('ascii')
     except:
@@ -322,8 +319,7 @@ def _clean_netloc(netloc):
 
 
 def split_netloc(netloc):
-    """Split netloc into username, password, host and port
-    """
+    """Split netloc into username, password, host and port"""
     username = password = host = port = ''
     if '@' in netloc:
         user_pw, netloc = netloc.split('@', 1)

@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 
-import urltools
+from urltools import urltools
 
 setup(
     name = 'urltools',

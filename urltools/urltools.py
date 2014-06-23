@@ -66,7 +66,7 @@ DEFAULT_PORT = {
     'ftp': '21',
     'sftp': '22'
 }
-UNQUOTE_EXCEPTIONS = {
+QUOTE_EXCEPTIONS = {
     'path': ' /?+#',
     'query': ' &=+#',
     'fragment': ' +#'
@@ -123,7 +123,16 @@ def normalize(url):
 def encode(url):
     """Encode URL"""
     parts = extract(url)
-    encoded = ParseResult(*(_idna_encode(p) for p in parts))
+    encoded = ParseResult(parts.scheme,
+                          parts.username,
+                          parts.password,
+                          _idna_encode(parts.subdomain),
+                          _idna_encode(parts.domain),
+                          _idna_encode(parts.tld),
+                          parts.port,
+                          urllib.quote(parts.path),
+                          urllib.quote(parts.query),
+                          urllib.quote(parts.fragment))
     return assemble(encoded)
 
 
@@ -175,7 +184,7 @@ def normalize_path(path):
     """Normalize path (collapse etc.)"""
     if path in ['//', '/' ,'']:
         return '/'
-    npath = normpath(unquote(path, exceptions=UNQUOTE_EXCEPTIONS['path']))
+    npath = normpath(unquote(path, exceptions=QUOTE_EXCEPTIONS['path']))
     if path[-1] == '/' and npath != '/':
         npath += '/'
     return npath
@@ -185,7 +194,7 @@ def normalize_query(query):
     """Normalize query (sort params by name, remove params without value)"""
     if query == '' or len(query) <= 2:
         return ''
-    nquery = unquote(query, exceptions=UNQUOTE_EXCEPTIONS['query'])
+    nquery = unquote(query, exceptions=QUOTE_EXCEPTIONS['query'])
     params = nquery.split('&')
     nparams = []
     for param in params:
@@ -199,11 +208,16 @@ def normalize_query(query):
 
 def normalize_fragment(fragment):
     """Normalize fragment (unquote with exceptions only)"""
-    return unquote(fragment, UNQUOTE_EXCEPTIONS['fragment'])
+    return unquote(fragment, QUOTE_EXCEPTIONS['fragment'])
 
 
 def unquote(text, exceptions=[]):
     """Unquote a text but ignore the exceptions"""
+    if not text:
+        if text is None:
+            raise TypeError('None object cannot be unquoted')
+        else:
+            return text
     if '%' not in text:
         return text
     s = text.split('%')

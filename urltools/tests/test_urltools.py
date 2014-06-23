@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-#import pytest
+import pytest
 
 from urltools import parse, extract, encode, split, split_netloc, split_host
 from urltools import normalize, normalize_path, normalize_query, unquote, normalize_host, normalize_fragment
@@ -158,6 +158,8 @@ def test_normalize_fragment():
 
 
 def test_unquote():
+    pytest.raises(TypeError, unquote, None)
+    assert unquote('') == ''
     assert unquote('%32%35') == '25'
     assert unquote('%25%32%35') == '%25'
     assert unquote('%25%32%35', ['%']) == '%2525'
@@ -173,6 +175,7 @@ def test_encode():
     assert encode('http://ジェーピーニック.jp/') == 'http://xn--hckqz9bzb1cyrb.jp/'
     assert encode('http://пример.рф') == 'http://xn--e1afmkfd.xn--p1ai'
     assert encode('пример.рф') == 'xn--e1afmkfd.xn--p1ai'
+    assert encode('http://exämple.com/mühüü') == 'http://xn--exmple-cua.com/m%C3%BCh%C3%BC%C3%BC'
 
 
 def test_parse():

@@ -73,7 +73,6 @@ UNQUOTE_EXCEPTIONS = {
 }
 
 
-
 SplitResult = namedtuple('SplitResult', ['scheme', 'netloc', 'path', 'query',
                                          'fragment'])
 ParseResult = namedtuple('ParseResult', ['scheme', 'username', 'password',

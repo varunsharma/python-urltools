@@ -34,7 +34,7 @@ __all__ = ['ParseResult', 'SplitResult', 'parse', 'extract', 'split',
            'normalize_fragment', 'unquote']
 
 
-PSL_URL = 'http://mxr.mozilla.org/mozilla-central/source/netwerk/dns/effective_tld_names.dat?raw=1'
+PSL_URL = 'https://publicsuffix.org/list/effective_tld_names.dat'
 
 def _get_public_suffix_list():
     """Get the public suffix list"""

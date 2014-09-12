@@ -1,32 +1,30 @@
-"""
-Copyright (c) 2013,2014 Roderick Baier
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
+# Copyright (c) 2013, 2014 Roderick Baier
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 import os
-import re
 import urllib
 from collections import namedtuple
 from posixpath import normpath
 
 
-__version__ = '0.1.14'
+__version__ = '0.1.15'
 
 __all__ = ['ParseResult', 'SplitResult', 'parse', 'extract', 'split',
            'split_netloc', 'split_host', 'assemble', 'encode', 'normalize',
@@ -37,7 +35,12 @@ __all__ = ['ParseResult', 'SplitResult', 'parse', 'extract', 'split',
 PSL_URL = 'https://publicsuffix.org/list/effective_tld_names.dat'
 
 def _get_public_suffix_list():
-    """Get the public suffix list"""
+    """Return a set containing all Public Suffixes.
+
+    If the env variable PUBLIC_SUFFIX_LIST does not point to a local copy of the
+    public suffix list it is downloaded into memory each time urltools is
+    imported.
+    """
     local_psl = os.environ.get('PUBLIC_SUFFIX_LIST')
     if local_psl:
         psl_raw = open(local_psl).readlines()
@@ -93,7 +96,11 @@ def _idna_decode(x):
 
 
 def normalize(url):
-    """Normalize a URL"""
+    """Normalize a URL.
+
+    >>> normalize('hTtp://ExAMPLe.COM:80')
+    'http://example.com/'
+    """
     if url == '':
         return ''
     parts = split(url.strip())
@@ -112,7 +119,7 @@ def normalize(url):
             path = normalize_path('/' + tmp[1])
     username, password, host, port = split_netloc(netloc)
     host = normalize_host(host)
-    port = normalize_port(parts.scheme, port)
+    port = _normalize_port(parts.scheme, port)
     query = normalize_query(parts.query)
     fragment = normalize_fragment(parts.fragment)
     result = ParseResult(parts.scheme, username, password, None, host, None,
@@ -121,7 +128,7 @@ def normalize(url):
 
 
 def encode(url):
-    """Encode URL"""
+    """Encode URL."""
     parts = extract(url)
     encoded = ParseResult(parts.scheme,
                           parts.username,
@@ -137,7 +144,7 @@ def encode(url):
 
 
 def assemble(parts):
-    """Assemble a ParseResult to a new URL"""
+    """Assemble a ParseResult to a new URL."""
     nurl = ''
     if parts.scheme:
         if parts.scheme in SCHEMES:
@@ -165,15 +172,21 @@ def assemble(parts):
 
 
 def normalize_host(host):
-    """Normalize host (decode IDNA)"""
+    """Normalize host (decode IDNA)."""
     if 'xn--' not in host:
         return host
-    parts = host.split('.')
-    return '.'.join([_idna_decode(p) for p in parts])
+    return '.'.join([_idna_decode(p) for p in host.split('.')])
 
 
-def normalize_port(scheme, port):
-    """Check if the port is default port"""
+def _normalize_port(scheme, port):
+    """Return port if it is not default port, else None.
+
+    >>> _normalize_port('http', '80')
+
+    >>> _normalize_port('http', '8080')
+    '8080'
+    """
+    assert type(port) == str
     if not scheme:
         return port
     if port and port != DEFAULT_PORT[scheme]:
@@ -181,8 +194,12 @@ def normalize_port(scheme, port):
 
 
 def normalize_path(path):
-    """Normalize path (collapse etc.)"""
-    if path in ['//', '/' ,'']:
+    """Normalize path: collapse etc.
+
+    >>> normalize_path('/a/b///c')
+    '/a/b/c'
+    """
+    if path in ['//', '/', '']:
         return '/'
     npath = normpath(unquote(path, exceptions=QUOTE_EXCEPTIONS['path']))
     if path[-1] == '/' and npath != '/':
@@ -191,7 +208,11 @@ def normalize_path(path):
 
 
 def normalize_query(query):
-    """Normalize query (sort params by name, remove params without value)"""
+    """Normalize query: sort params by name, remove params without value.
+
+    >>> normalize_query('z=3&y=&x=1')
+    'x=1&z=3'
+    """
     if query == '' or len(query) <= 2:
         return ''
     nquery = unquote(query, exceptions=QUOTE_EXCEPTIONS['query'])
@@ -212,7 +233,13 @@ def normalize_fragment(fragment):
 
 
 def unquote(text, exceptions=[]):
-    """Unquote a text but ignore the exceptions"""
+    """Unquote a text but ignore the exceptions.
+
+    >>> unquote('foo%23bar')
+    'foo#bar'
+    >>> unquote('foo%23bar', ['#'])
+    'foo%23bar'
+    """
     if not text:
         if text is None:
             raise TypeError('None object cannot be unquoted')
@@ -235,7 +262,11 @@ def unquote(text, exceptions=[]):
 
 
 def parse(url):
-    """Parse a URL"""
+    """Parse a URL.
+
+    >>> parse('http://example.com/foo/')
+    ParseResult(scheme='http', ..., domain='example', tld='com', ..., path='/foo/', ...)
+    """
     parts = split(url)
     if parts.scheme:
         (username, password, host, port) = split_netloc(parts.netloc)
@@ -247,7 +278,11 @@ def parse(url):
 
 
 def extract(url):
-    """Extract as much information from a (relative) URL as possible"""
+    """Extract as much information from a (relative) URL as possible.
+
+    >>> extract('example.com/abc')
+    ParseResult(..., domain='example', tld='com', ..., path='/abc', ...)
+    """
     parts = split(url)
     if parts.scheme:
         netloc = parts.netloc
@@ -266,7 +301,11 @@ def extract(url):
 
 
 def split(url):
-    """Split URL into scheme, netloc, path, query and fragment"""
+    """Split URL into scheme, netloc, path, query and fragment.
+
+    >>> split('http://www.example.com/abc?x=1&y=2#foo')
+    SplitResult(scheme='http', netloc='www.example.com', path='/abc', query='x=1&y=2', fragment='foo')
+    """
     scheme = netloc = path = query = fragment = ''
     ip6_start = url.find('[')
     scheme_end = url.find(':')
@@ -322,7 +361,11 @@ def split(url):
 
 
 def _clean_netloc(netloc):
-    """Remove trailing '.' and ':' and tolower"""
+    """Remove trailing '.' and ':' and tolower
+
+    >>> _clean_netloc('eXample.coM:')
+    'example.com'
+    """
     try:
         netloc.encode('ascii')
     except:
@@ -332,7 +375,11 @@ def _clean_netloc(netloc):
 
 
 def split_netloc(netloc):
-    """Split netloc into username, password, host and port"""
+    """Split netloc into username, password, host and port.
+
+    >>> split_netloc('foo:bar@www.example.com:8080')
+    ('foo', 'bar', 'www.example.com', '8080')
+    """
     username = password = host = port = ''
     if '@' in netloc:
         user_pw, netloc = netloc.split('@', 1)
@@ -349,16 +396,22 @@ def split_netloc(netloc):
 
 
 def split_host(host):
-    """Use the Public Suffix List to split host into subdomain, domain and tld
+    """Use the Public Suffix List to split host into subdomain, domain and tld.
+
+    >>> split_host('foo.bar.co.uk')
+    ('foo', 'bar', 'co.uk')
     """
+    # host is IPv6?
     if '[' in host:
         return '', host, ''
-    domain = subdomain = tld = ''
+    # host is IPv4?
     for c in host:
         if c not in IP_CHARS:
             break
     else:
         return '', host, ''
+    # host is a domain name
+    domain = subdomain = tld = ''
     parts = host.split('.')
     for i in range(len(parts)):
         tld = '.'.join(parts[i:])
@@ -376,5 +429,5 @@ def split_host(host):
             tld = '.'.join(parts[i-1:])
             break
     if '.' in domain:
-        (subdomain, domain) = domain.rsplit('.', 1) 
+        (subdomain, domain) = domain.rsplit('.', 1)
     return subdomain, domain, tld

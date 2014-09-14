@@ -11,6 +11,6 @@ setup(
     author='Roderick Baier',
     author_email='roderick.baier@gmail.com',
     license='MIT',
-    url='https://github.com/rbaier/urltools',
+    url='https://github.com/rbaier/python-urltools',
     packages=find_packages(exclude=['tests'])
 )

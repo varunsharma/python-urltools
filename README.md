@@ -25,20 +25,21 @@ Rules that are applied to normalize a URL:
 
 ### Parse
 
-The result of `parse` and `extract` is a `ParseResult` named tuple that contains
+The result of `parse` and `extract` is a `URL` named tuple that contains
 `scheme`, `username`, `password`, `subdomain`, `domain`, `tld`, `port`, `path`,
-`query` and `fragment`.
+`query`, `fragment` and the original `url` itself.
 
     >>> urltools.parse("http://example.co.uk/foo/bar?x=1#abc")
-    ParseResult(scheme='http', username='', password='', subdomain='',
-    domain='example', tld='co.uk', port='', path='/foo/bar', query='x=1',
-    fragment='abc')
+    URL(scheme='http', username='', password='', subdomain='', domain='example',
+    tld='co.uk', port='', path='/foo/bar', query='x=1', fragment='abc',
+    url='http://example.co.uk/foo/bar?x=1#abc')
 
 If the `scheme` is missing `parse` interprets the URL as relative.
 
     >>> urltools.parse("www.example.co.uk/abc")
-    ParseResult(scheme='', username='', password='', subdomain='', domain='',
-    tld='', port='', path='www.example.co.uk/abc', query='', fragment='')
+    URL(scheme='', username='', password='', subdomain='', domain='', tld='',
+    port='', path='www.example.co.uk/abc', query='', fragment='',
+    url='www.example.co.uk/abc')
 
 
 ### Extract
@@ -47,21 +48,27 @@ If the `scheme` is missing `parse` interprets the URL as relative.
 information as possible.
 
     >>> urltools.extract("www.example.co.uk/abc")
-    ParseResult(scheme='', username='', password='', subdomain='www',
-    domain='example', tld='co.uk', port='', path='/abc', query='', fragment='')
+    URL(scheme='', username='', password='', subdomain='www', domain='example',
+    tld='co.uk', port='', path='/abc', query='', fragment='',
+    url='www.example.co.uk/abc')
 
 
 ### Additional functions
 
 Besides the already described main functions `urltools` has some more functions
-to manipulate segments of a URL.
+to manipulate segments of a URL or create new URLs.
+
+* `construct` a new URL from parts
+
+        >>> construct(URL('http', '', '', '', 'example', 'com', '/abc', 'x=1',
+        ... 'foo', None))
+        'http://example.com/abc?x=1#foo'
 
 * `encode` (IDNA, see RFC 3490)
 
         >>> urltools.encode("http://müller.de")
         'http://xn--mller-kva.de/'
 
-* `assemble` a new URL from a `ParseResult`
 * `normalize_host`
 * `normalize_path`
 

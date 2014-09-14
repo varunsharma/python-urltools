@@ -24,12 +24,12 @@ from collections import namedtuple
 from posixpath import normpath
 
 
-__version__ = '0.1.15'
+__version__ = '0.2.1'
 
-__all__ = ['ParseResult', 'SplitResult', 'parse', 'extract', 'split',
-           'split_netloc', 'split_host', 'assemble', 'encode', 'normalize',
+__all__ = ['URL', 'SplitResult', 'parse', 'extract', 'construct', 'normalize',
            'normalize_host', 'normalize_path', 'normalize_query',
-           'normalize_fragment', 'unquote']
+           'normalize_fragment', 'encode', 'unquote', 'split', 'split_netloc',
+           'split_host']
 
 
 PSL_URL = 'https://publicsuffix.org/list/effective_tld_names.dat'
@@ -78,10 +78,9 @@ QUOTE_EXCEPTIONS = {
 
 SplitResult = namedtuple('SplitResult', ['scheme', 'netloc', 'path', 'query',
                                          'fragment'])
-ParseResult = namedtuple('ParseResult', ['scheme', 'username', 'password',
-                                         'subdomain', 'domain', 'tld', 'port',
-                                         'path', 'query', 'fragment'])
-
+URL = namedtuple('URL', ['scheme', 'username', 'password', 'subdomain',
+                         'domain', 'tld', 'port', 'path', 'query', 'fragment',
+                         'url'])
 
 _hextochr = {'%02x' % i: chr(i) for i in range(256)}
 _hextochr.update({'%02X' % i: chr(i) for i in range(256)})
@@ -101,7 +100,7 @@ def normalize(url):
     >>> normalize('hTtp://ExAMPLe.COM:80')
     'http://example.com/'
     """
-    if url == '':
+    if url.strip() == '':
         return ''
     parts = split(url.strip())
     if parts.scheme:
@@ -114,37 +113,35 @@ def normalize(url):
         netloc = parts.path
         path = ''
         if '/' in netloc:
-            tmp = netloc.split('/', 1)
-            netloc = tmp[0]
-            path = normalize_path('/' + tmp[1])
+            netloc, path_raw = netloc.split('/', 1)
+            path = normalize_path('/' + path_raw)
     username, password, host, port = split_netloc(netloc)
     host = normalize_host(host)
     port = _normalize_port(parts.scheme, port)
     query = normalize_query(parts.query)
     fragment = normalize_fragment(parts.fragment)
-    result = ParseResult(parts.scheme, username, password, None, host, None,
-                         port, path, query, fragment)
-    return assemble(result)
+    return construct(URL(parts.scheme, username, password, None, host, None,
+                         port, path, query, fragment, None))
 
 
 def encode(url):
     """Encode URL."""
     parts = extract(url)
-    encoded = ParseResult(parts.scheme,
-                          parts.username,
-                          parts.password,
-                          _idna_encode(parts.subdomain),
-                          _idna_encode(parts.domain),
-                          _idna_encode(parts.tld),
-                          parts.port,
-                          urllib.quote(parts.path),
-                          urllib.quote(parts.query),
-                          urllib.quote(parts.fragment))
-    return assemble(encoded)
+    return construct(URL(parts.scheme,
+                         parts.username,
+                         parts.password,
+                         _idna_encode(parts.subdomain),
+                         _idna_encode(parts.domain),
+                         _idna_encode(parts.tld),
+                         parts.port,
+                         urllib.quote(parts.path),
+                         urllib.quote(parts.query),
+                         urllib.quote(parts.fragment),
+                         None))
 
 
-def assemble(parts):
-    """Assemble a ParseResult to a new URL."""
+def construct(parts):
+    """Construct a new URL from parts."""
     nurl = ''
     if parts.scheme:
         if parts.scheme in SCHEMES:
@@ -265,23 +262,23 @@ def parse(url):
     """Parse a URL.
 
     >>> parse('http://example.com/foo/')
-    ParseResult(scheme='http', ..., domain='example', tld='com', ..., path='/foo/', ...)
+    URL(scheme='http', ..., domain='example', tld='com', ..., path='/foo/', ...)
     """
     parts = split(url)
     if parts.scheme:
-        (username, password, host, port) = split_netloc(parts.netloc)
-        (subdomain, domain, tld) = split_host(host)
+        username, password, host, port = split_netloc(parts.netloc)
+        subdomain, domain, tld = split_host(host)
     else:
         username = password = subdomain = domain = tld = port = ''
-    return ParseResult(parts.scheme, username, password, subdomain, domain, tld,
-                       port, parts.path, parts.query, parts.fragment)
+    return URL(parts.scheme, username, password, subdomain, domain, tld,
+               port, parts.path, parts.query, parts.fragment, url)
 
 
 def extract(url):
     """Extract as much information from a (relative) URL as possible.
 
     >>> extract('example.com/abc')
-    ParseResult(..., domain='example', tld='com', ..., path='/abc', ...)
+    URL(..., domain='example', tld='com', ..., path='/abc', ...)
     """
     parts = split(url)
     if parts.scheme:
@@ -291,13 +288,12 @@ def extract(url):
         netloc = parts.path
         path = ''
         if '/' in netloc:
-            tmp = netloc.split('/', 1)
-            netloc = tmp[0]
-            path = '/' + tmp[1]
-    (username, password, host, port) = split_netloc(netloc)
-    (subdomain, domain, tld) = split_host(host)
-    return ParseResult(parts.scheme, username, password, subdomain, domain, tld,
-                       port, path, parts.query, parts.fragment)
+            netloc, path_raw = netloc.split('/', 1)
+            path = '/' + path_raw
+    username, password, host, port = split_netloc(netloc)
+    subdomain, domain, tld = split_host(host)
+    return URL(parts.scheme, username, password, subdomain, domain, tld,
+               port, path, parts.query, parts.fragment, url)
 
 
 def split(url):
@@ -429,5 +425,5 @@ def split_host(host):
             tld = '.'.join(parts[i-1:])
             break
     if '.' in domain:
-        (subdomain, domain) = domain.rsplit('.', 1)
+        subdomain, domain = domain.rsplit('.', 1)
     return subdomain, domain, tld

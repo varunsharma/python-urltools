@@ -43,7 +43,8 @@ def _get_public_suffix_list():
     """
     local_psl = os.environ.get('PUBLIC_SUFFIX_LIST')
     if local_psl:
-        psl_raw = open(local_psl).readlines()
+        with open(local_psl) as f:
+            psl_raw = f.readlines()
     else:
         psl_raw = urllib.urlopen(PSL_URL).readlines()
     psl = set()

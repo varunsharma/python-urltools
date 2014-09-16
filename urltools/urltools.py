@@ -24,7 +24,7 @@ from collections import namedtuple
 from posixpath import normpath
 
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 __all__ = ['URL', 'SplitResult', 'parse', 'extract', 'construct', 'normalize',
            'normalize_host', 'normalize_path', 'normalize_query',

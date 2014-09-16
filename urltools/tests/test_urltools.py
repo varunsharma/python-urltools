@@ -88,7 +88,7 @@ def test_normalize():
 
 
 def test_normalize__idn():
-    assert normalize('http://xn--e1afmkfd.xn--p1ai/') == 'http://пример.рф/'
+    assert normalize('http://xn--e1afmkfd.xn--p1ai/') == u'http://пример.рф/'
 
 
 def test_normalize__no_scheme():
@@ -126,8 +126,8 @@ def test_normalize__malformed():
 
 
 def test_normalize_host():
-    assert normalize_host('xn--e1afmkfd.xn--p1ai') == 'пример.рф'
-    assert normalize_host('xn--mller-kva.de') == 'müller.de'
+    assert normalize_host('xn--e1afmkfd.xn--p1ai') == u'пример.рф'
+    assert normalize_host('xn--mller-kva.de') == u'müller.de'
 
 
 def test_normalize_port():
@@ -186,12 +186,13 @@ def test_unquote():
 
 
 def test_encode():
-    assert encode('http://exämple.com') == 'http://xn--exmple-cua.com'
-    assert encode('http://müller.de/') == 'http://xn--mller-kva.de/'
-    assert encode('http://ジェーピーニック.jp/') == 'http://xn--hckqz9bzb1cyrb.jp/'
-    assert encode('http://пример.рф') == 'http://xn--e1afmkfd.xn--p1ai'
-    assert encode('пример.рф') == 'xn--e1afmkfd.xn--p1ai'
-    assert encode('http://exämple.com/mühüü') == 'http://xn--exmple-cua.com/m%C3%BCh%C3%BC%C3%BC'
+    assert encode(u'http://exämple.com') == u'http://xn--exmple-cua.com'
+    assert encode(u'http://müller.de/') == u'http://xn--mller-kva.de/'
+    assert encode(u'http://ジェーピーニック.jp/') == u'http://xn--hckqz9bzb1cyrb.jp/'
+    assert encode(u'http://пример.рф') == u'http://xn--e1afmkfd.xn--p1ai'
+    assert encode(u'пример.рф') == u'xn--e1afmkfd.xn--p1ai'
+    assert encode(u'http://exämple.com/mühüü') == u'http://xn--exmple-cua.com/m%C3%BCh%C3%BC%C3%BC'
+    assert encode(u'http://example.com/?x=mühüü') == u'http://example.com/?x=m%C3%BCh%C3%BC%C3%BC'
 
 
 def test_parse():
@@ -203,10 +204,12 @@ def test_parse():
     assert parse('http://example.com?foo=bar:blub') == ('http', '', '', '', 'example', 'com', '', '', 'foo=bar:blub', '', 'http://example.com?foo=bar:blub')
     assert parse('http://example.com?foo=bar:blub/') == ('http', '', '', '', 'example', 'com', '', '', 'foo=bar:blub/', '', 'http://example.com?foo=bar:blub/')
 
-    assert parse('http://пример.рф') == ('http', '', '', '', 'пример', 'рф', '', '', '', '', 'http://пример.рф')
-    assert parse('http://إختبار.مصر/') == ('http', '', '', '', 'إختبار', 'مصر', '', '/', '', '', 'http://إختبار.مصر/')
-
     assert parse('mailto:foo@bar.com') == ('mailto', 'foo', '', '', 'bar', 'com', '', '', '', '', 'mailto:foo@bar.com')
+
+
+def test_parse__idn():
+    assert parse(u'http://пример.рф') == ('http', '', '', '', u'пример', u'рф', '', '', '', '', u'http://пример.рф')
+    assert parse(u'http://إختبار.مصر/') == ('http', '', '', '', u'إختبار', u'مصر', '', '/', '', '', u'http://إختبار.مصر/')
 
 
 def test_parse__no_scheme():
@@ -235,10 +238,12 @@ def test_extract():
     assert extract('http://example.com?x=y:z') == ('http', '', '', '', 'example', 'com', '', '', 'x=y:z', '', 'http://example.com?x=y:z')
     assert extract('http://example.com?x=y:z/') == ('http', '', '', '', 'example', 'com', '', '', 'x=y:z/', '', 'http://example.com?x=y:z/')
 
-    assert extract('http://пример.рф') == ('http', '', '', '', 'пример', 'рф', '', '', '', '', 'http://пример.рф')
-    assert extract('http://إختبار.مصر/') == ('http', '', '', '', 'إختبار', 'مصر', '', '/', '', '', 'http://إختبار.مصر/')
-
     assert extract('mailto:foo@bar.com') == ('mailto', 'foo', '', '', 'bar', 'com', '', '', '', '', 'mailto:foo@bar.com')
+
+
+def test_extract__idn():
+    assert extract(u'http://пример.рф') == ('http', '', '', '', u'пример', u'рф', '', '', '', '', u'http://пример.рф')
+    assert extract(u'http://إختبار.مصر/') == ('http', '', '', '', u'إختبار', u'مصر', '', '/', '', '', u'http://إختبار.مصر/')
 
 
 def test_extract__no_scheme():
@@ -264,7 +269,10 @@ def test_clean_netloc():
     assert _clean_netloc('example.com.') == 'example.com'
     assert _clean_netloc('example.com:') == 'example.com'
     assert _clean_netloc('fOO.baR.exaMPle.com') == 'foo.bar.example.com'
-    assert _clean_netloc('ПриМЕр.Рф') == 'пример.рф'
+
+
+def test_clean_netloc__idn():
+    assert _clean_netloc(u'ПриМЕр.Рф') == u'пример.рф'
 
 
 def test_split():
@@ -377,8 +385,8 @@ def test_split_host__exception():
 
 
 def test_split_host__idn():
-    assert split_host('例子.中国') == ('', '例子', '中国')
-    assert split_host('உதாரணம்.இந்தியா') == ('', 'உதாரணம்', 'இந்தியா')
+    assert split_host(u'例子.中国') == ('', u'例子', u'中国')
+    assert split_host(u'உதாரணம்.இந்தியா') == ('', u'உதாரணம்', u'இந்தியா')
 
 
 def test_split_host__ip():

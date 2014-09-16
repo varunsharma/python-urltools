@@ -28,16 +28,16 @@ def test_normalize():
     assert normalize('http://example.com:/') == 'http://example.com/'
     assert normalize('http://example.com/#') == 'http://example.com/'
 
+    # subdomain
+    assert normalize('http://www.example.com/') == 'http://www.example.com/'
+    assert normalize('http://www.example.com') == 'http://www.example.com/'
+    assert normalize('http://foo.bar.example.com/') == 'http://foo.bar.example.com/'
+
     # port
     assert normalize('http://example.com:80/') == 'http://example.com/'
     assert normalize('https://example.com:443/') == 'https://example.com/'
     assert normalize('ws://example.com:80/') == 'ws://example.com/'
     assert normalize('http://example.com:8080/') == 'http://example.com:8080/'
-
-    # subdomain
-    assert normalize('http://www.example.com/') == 'http://www.example.com/'
-    assert normalize('http://www.example.com') == 'http://www.example.com/'
-    assert normalize('http://foo.bar.example.com/') == 'http://foo.bar.example.com/'
 
     # path
     assert normalize('http://example.com/a') == 'http://example.com/a'
@@ -82,27 +82,29 @@ def test_normalize():
     assert normalize('http://foo:bar@example.com') == 'http://foo:bar@example.com/'
     assert normalize('http://Foo:BAR@exaMPLE.COM/') == 'http://Foo:BAR@example.com/'
 
-    # IDN
-    assert normalize('http://xn--e1afmkfd.xn--p1ai/') == 'http://пример.рф/'
-
-
-def test_normalize__scheme():
-    # no scheme
-    assert normalize('eXAmplE.com') == 'example.com'
-    assert normalize('example.com/a/../b') == 'example.com/b'
-    assert normalize('www.example.com') == 'www.example.com'
     # scheme without //
     assert normalize('mailto:foo@example.com') == 'mailto:foo@example.com'
     assert normalize('mailto:foo@eXAMPle.cOM') == 'mailto:foo@example.com'
 
 
-def test_normalize__ip():
-    # IPv4
+def test_normalize__idn():
+    assert normalize('http://xn--e1afmkfd.xn--p1ai/') == 'http://пример.рф/'
+
+
+def test_normalize__no_scheme():
+    assert normalize('eXAmplE.com') == 'example.com'
+    assert normalize('example.com/a/../b') == 'example.com/b'
+    assert normalize('www.example.com') == 'www.example.com'
+
+
+def test_normalize__ip4():
     assert normalize('http://192.168.1.1/') == 'http://192.168.1.1/'
     assert normalize('http://192.168.1.1:8088/foo?x=1') == 'http://192.168.1.1:8088/foo?x=1'
     assert normalize('192.168.1.1') == '192.168.1.1'
     assert normalize('192.168.1.1:8080/foo/bar') == '192.168.1.1:8080/foo/bar'
-    # IPv6
+
+
+def test_normalize__ip6():
     assert normalize('[::1]') == '[::1]'
     assert normalize('http://[::1]') == 'http://[::1]/'
     assert normalize('[::1]:8080') == '[::1]:8080'
@@ -142,8 +144,8 @@ def test_normalize_path():
     assert normalize_path('/a/b/') == '/a/b/'
     assert normalize_path('/a/b/c') == '/a/b/c'
     assert normalize_path('/.') == '/'
-    assert normalize_path('/..') == '/'
     assert normalize_path('/./') == '/'
+    assert normalize_path('/..') == '/'
     assert normalize_path('/../') == '/'
     assert normalize_path('/a/./b/././c') == '/a/b/c'
     assert normalize_path('/a/../b') == '/b'
@@ -317,6 +319,7 @@ def test_split__ip6():
     assert split('http://[::1]:8080/') == ('http', '[::1]:8080', '/', '', '')
     assert split('[::1]') == ('', '', '[::1]', '', '')
     assert split('[::1]:8080') == ('', '', '[::1]:8080', '', '')
+    assert split('[::ffff:127.0.0.1]:8080') == ('', '', '[::ffff:127.0.0.1]:8080', '', '')
 
 
 def test_split_netloc():
@@ -325,21 +328,25 @@ def test_split_netloc():
     assert split_netloc('www.example.com') == ('', '', 'www.example.com', '')
 
     assert split_netloc('example.com:80') == ('', '', 'example.com', '80')
-    assert split_netloc('example.com:8080') == ('', '', 'example.com', '8080')
-    assert split_netloc('foo.bar.example.com:8888') == ('', '', 'foo.bar.example.com', '8888')
     assert split_netloc('localhost:8080') == ('', '', 'localhost', '8080')
-
+    assert split_netloc('foo.bar.example.com:8888') == ('', '', 'foo.bar.example.com', '8888')
     assert split_netloc('foo:bar@www.example.com:8080') == ('foo', 'bar', 'www.example.com', '8080')
 
 
 def test_split_netloc__ip4():
     assert split_netloc('192.168.1.1') == ('', '', '192.168.1.1', '')
     assert split_netloc('192.168.1.1:8080') == ('', '', '192.168.1.1', '8080')
+    assert split_netloc('foo:bar@192.168.1.1:8080') == ('foo', 'bar', '192.168.1.1', '8080')
 
 
 def test_split_netloc__ip6():
     assert split_netloc('[::1]') == ('', '', '[::1]', '')
     assert split_netloc('[::1]:8080') == ('', '', '[::1]', '8080')
+    assert split_netloc('[2001:0db8:0000:08d3:0000:8a2e:0070:7344]') == ('', '', '[2001:0db8:0000:08d3:0000:8a2e:0070:7344]', '')
+    assert split_netloc('[2001:db8:0:8d3:0:8a2e:70:7344]') == ('', '', '[2001:db8:0:8d3:0:8a2e:70:7344]', '')
+    assert split_netloc('[::ffff:7f00:1]') == ('', '', '[::ffff:7f00:1]', '')
+    assert split_netloc('[::ffff:127.0.0.1]') == ('', '', '[::ffff:127.0.0.1]', '')
+    assert split_netloc('[::ffff:127.0.0.1]:8080') == ('', '', '[::ffff:127.0.0.1]', '8080')
     assert split_netloc('foo:bar@[::1]:8080') == ('foo', 'bar', '[::1]', '8080')
 
 

@@ -1,10 +1,18 @@
 import os
-import urllib
+import codecs
 from collections import namedtuple
 from posixpath import normpath
 
+try:
+    from urllib.request import urlopen
+    from urllib.parse import quote
+    unicode = str
+except:
+    from urllib import urlopen
+    from urllib import quote
 
-__version__ = '0.2.2'
+
+__version__ = '0.3.0'
 
 __all__ = ['URL', 'SplitResult', 'parse', 'extract', 'construct', 'normalize',
            'normalize_host', 'normalize_path', 'normalize_query',
@@ -13,6 +21,7 @@ __all__ = ['URL', 'SplitResult', 'parse', 'extract', 'construct', 'normalize',
 
 
 PSL_URL = 'https://publicsuffix.org/list/effective_tld_names.dat'
+
 
 def _get_public_suffix_list():
     """Return a set containing all Public Suffixes.
@@ -23,10 +32,10 @@ def _get_public_suffix_list():
     """
     local_psl = os.environ.get('PUBLIC_SUFFIX_LIST')
     if local_psl:
-        with open(local_psl) as f:
+        with codecs.open(local_psl, 'r', 'utf-8') as f:
             psl_raw = f.readlines()
     else:
-        psl_raw = urllib.urlopen(PSL_URL).readlines()
+        psl_raw = unicode(urlopen(PSL_URL).read(), 'utf-8').split('\n')
     psl = set()
     for line in psl_raw:
         item = line.strip()
@@ -48,7 +57,8 @@ DEFAULT_PORT = {
     'ws': '80',
     'wss': '443',
     'ftp': '21',
-    'sftp': '22'
+    'sftp': '22',
+    'ldap': '389'
 }
 QUOTE_EXCEPTIONS = {
     'path': ' /?+#',
@@ -62,17 +72,6 @@ SplitResult = namedtuple('SplitResult', ['scheme', 'netloc', 'path', 'query',
 URL = namedtuple('URL', ['scheme', 'username', 'password', 'subdomain',
                          'domain', 'tld', 'port', 'path', 'query', 'fragment',
                          'url'])
-
-_hextochr = {'%02x' % i: chr(i) for i in range(256)}
-_hextochr.update({'%02X' % i: chr(i) for i in range(256)})
-
-
-def _idna_encode(x):
-    return x.decode('utf-8').encode('idna')
-
-
-def _idna_decode(x):
-    return x.decode('idna').encode('utf-8')
 
 
 def normalize(url):
@@ -105,6 +104,21 @@ def normalize(url):
                          port, path, query, fragment, None))
 
 
+def _idna_encode(x):
+    return x.encode('idna').decode('utf-8')
+
+
+def _encode_query(query):
+    """Quote all values of a query string."""
+    if query == '':
+        return query
+    query_args = []
+    for query_kv in query.split('&'):
+        k, v = query_kv.split('=')
+        query_args.append(k + "=" + quote(v.encode('utf-8')))
+    return '&'.join(query_args)
+
+
 def encode(url):
     """Encode URL."""
     parts = extract(url)
@@ -115,9 +129,9 @@ def encode(url):
                          _idna_encode(parts.domain),
                          _idna_encode(parts.tld),
                          parts.port,
-                         urllib.quote(parts.path),
-                         urllib.quote(parts.query),
-                         urllib.quote(parts.fragment),
+                         quote(parts.path.encode('utf-8')),
+                         _encode_query(parts.query),
+                         quote(parts.fragment.encode('utf-8')),
                          None))
 
 
@@ -149,6 +163,10 @@ def construct(parts):
     return nurl
 
 
+def _idna_decode(x):
+    return codecs.decode(x.encode('utf-8'), 'idna')
+
+
 def normalize_host(host):
     """Normalize host (decode IDNA)."""
     if 'xn--' not in host:
@@ -164,7 +182,6 @@ def _normalize_port(scheme, port):
     >>> _normalize_port('http', '8080')
     '8080'
     """
-    assert type(port) == str
     if not scheme:
         return port
     if port and port != DEFAULT_PORT[scheme]:
@@ -208,6 +225,10 @@ def normalize_query(query):
 def normalize_fragment(fragment):
     """Normalize fragment (unquote with exceptions only)"""
     return unquote(fragment, QUOTE_EXCEPTIONS['fragment'])
+
+
+_hextochr = {'%02x' % i: chr(i) for i in range(256)}
+_hextochr.update({'%02X' % i: chr(i) for i in range(256)})
 
 
 def unquote(text, exceptions=[]):
@@ -344,11 +365,9 @@ def _clean_netloc(netloc):
     'example.com'
     """
     try:
-        netloc.encode('ascii')
+        return netloc.rstrip('.:').lower()
     except:
         return netloc.rstrip('.:').decode('utf-8').lower().encode('utf-8')
-    else:
-        return netloc.rstrip('.:').lower()
 
 
 def split_netloc(netloc):

@@ -1,1 +1,1 @@
-from urltools import *
+from .urltools import *

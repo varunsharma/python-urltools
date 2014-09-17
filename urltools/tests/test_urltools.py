@@ -186,18 +186,18 @@ def test_unquote():
 
 
 def test_encode():
-    assert encode(u'http://exämple.com') == u'http://xn--exmple-cua.com'
-    assert encode(u'http://müller.de/') == u'http://xn--mller-kva.de/'
-    assert encode(u'http://ジェーピーニック.jp/') == u'http://xn--hckqz9bzb1cyrb.jp/'
-    assert encode(u'http://пример.рф') == u'http://xn--e1afmkfd.xn--p1ai'
-    assert encode(u'пример.рф') == u'xn--e1afmkfd.xn--p1ai'
-    assert encode(u'http://exämple.com/mühüü') == u'http://xn--exmple-cua.com/m%C3%BCh%C3%BC%C3%BC'
-    assert encode(u'http://example.com/?x=mühüü') == u'http://example.com/?x=m%C3%BCh%C3%BC%C3%BC'
+    assert encode(u'http://exämple.com') == 'http://xn--exmple-cua.com'
+    assert encode(u'http://müller.de/') == 'http://xn--mller-kva.de/'
+    assert encode(u'http://ジェーピーニック.jp/') == 'http://xn--hckqz9bzb1cyrb.jp/'
+    assert encode(u'http://пример.рф') == 'http://xn--e1afmkfd.xn--p1ai'
+    assert encode(u'пример.рф') == 'xn--e1afmkfd.xn--p1ai'
+    assert encode(u'http://exämple.com/mühüü') == 'http://xn--exmple-cua.com/m%C3%BCh%C3%BC%C3%BC'
+    assert encode(u'http://example.com/?x=mühüü') == 'http://example.com/?x=m%C3%BCh%C3%BC%C3%BC'
 
 
 def test__encode_query():
     assert _encode_query('x=abc') == 'x=abc'
-    assert _encode_query(u'x=mühüü') == u'x=m%C3%BCh%C3%BC%C3%BC'
+    assert _encode_query(u'x=mühüü') == 'x=m%C3%BCh%C3%BC%C3%BC'
 
 
 def test_parse():

@@ -5,7 +5,7 @@ from urltools import parse, extract, encode, split, split_netloc, split_host
 from urltools import normalize, normalize_path, normalize_query, unquote
 from urltools import normalize_host, normalize_fragment
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
-from urltools.urltools import _normalize_port
+from urltools.urltools import _normalize_port, _encode_query
 
 
 # @pytest.mark.skipif('True')
@@ -193,6 +193,11 @@ def test_encode():
     assert encode(u'пример.рф') == u'xn--e1afmkfd.xn--p1ai'
     assert encode(u'http://exämple.com/mühüü') == u'http://xn--exmple-cua.com/m%C3%BCh%C3%BC%C3%BC'
     assert encode(u'http://example.com/?x=mühüü') == u'http://example.com/?x=m%C3%BCh%C3%BC%C3%BC'
+
+
+def test__encode_query():
+    assert _encode_query('x=abc') == 'x=abc'
+    assert _encode_query(u'x=mühüü') == u'x=m%C3%BCh%C3%BC%C3%BC'
 
 
 def test_parse():

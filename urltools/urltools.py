@@ -108,17 +108,20 @@ def _idna_encode(x):
     return x.encode('idna').decode('utf-8')
 
 
+def _encode_query(query):
+    """Quote all values of a query string."""
+    if query == '':
+        return query
+    query_args = []
+    for query_kv in query.split('&'):
+        k, v = query_kv.split('=')
+        query_args.append(k + "=" + quote(v.encode('utf-8')))
+    return '&'.join(query_args)
+
+
 def encode(url):
     """Encode URL."""
     parts = extract(url)
-    if parts.query != '':
-        query_args = []
-        for query_kv in parts.query.split('&'):
-            k, v = query_kv.split('=')
-            query_args.append(k + "=" + quote(v.encode('utf-8')))
-        query = '&'.join(query_args)
-    else:
-        query = ''
     return construct(URL(parts.scheme,
                          parts.username,
                          parts.password,
@@ -127,7 +130,7 @@ def encode(url):
                          _idna_encode(parts.tld),
                          parts.port,
                          quote(parts.path.encode('utf-8')),
-                         query,
+                         _encode_query(parts.query),
                          quote(parts.fragment.encode('utf-8')),
                          None))
 

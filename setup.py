@@ -8,6 +8,7 @@ setup(
     name='urltools',
     version=urltools.__version__,
     description='Some functions to parse and normalize URLs.',
+    long_description='Some functions to parse and normalize URLs.',
     author='Roderick Baier',
     author_email='roderick.baier@gmail.com',
     license='MIT',

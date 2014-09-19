@@ -1,6 +1,13 @@
 urltools
 ========
 
+[![version](https://pypip.in/v/urltools/badge.png)](https://pypi.python.org/pypi/urltools)
+[![Supported Python versions](https://pypip.in/py_versions/urltools/badge.svg)](https://pypi.python.org/pypi/urltools/)
+[![egg](https://pypip.in/egg/urltools/badge.png)](https://pypi.python.org/pypi/urltools)
+[![wheel](https://pypip.in/wheel/urltools/badge.png)](https://pypi.python.org/pypi/urltools)
+[![downloads](https://pypip.in/d/urltools/badge.png)](https://pypi.python.org/pypi/urltools)
+[![license](https://pypip.in/license/urltools/badge.png)](https://pypi.python.org/pypi/urltools)
+
 Some functions to parse and normalize URLs.
 
 

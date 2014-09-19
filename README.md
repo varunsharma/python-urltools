@@ -115,7 +115,7 @@ You can install `urltools` from the Python Package Index (PyPI):
 
 ... or get the newest version directly from GitHub:
 
-    pip install -e git://github.com/rbaier/urltools.git#egg=urltools
+    pip install -e git://github.com/rbaier/python-urltools.git#egg=urltools
 
 
 

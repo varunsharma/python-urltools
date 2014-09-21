@@ -3,12 +3,11 @@ import pytest
 
 from urltools import parse, extract, encode, split, split_netloc, split_host
 from urltools import normalize, normalize_path, normalize_query, unquote
-from urltools import normalize_host, normalize_fragment
+from urltools import normalize_host, normalize_fragment, compare
 from urltools.urltools import _get_public_suffix_list, _clean_netloc
 from urltools.urltools import _normalize_port, _encode_query
 
 
-# @pytest.mark.skipif('True')
 def test_get_public_suffix_list():
     psl = _get_public_suffix_list()
     assert 'de' in psl
@@ -171,6 +170,11 @@ def test_normalize_query():
 def test_normalize_fragment():
     assert normalize_fragment('foo%25%32%35bar') == 'foo%25bar'
     assert normalize_fragment('foo%23bar') == 'foo%23bar'
+
+
+def test_compare():
+    assert compare("http://examPLe.com:80/abc?x=&b=1", "http://eXAmple.com/abc?b=1") is True
+    assert compare("http://examPLe.com:80/abc?x=&b=1", "http://eXAmple.com/abc/de?b=1") is False
 
 
 def test_unquote():

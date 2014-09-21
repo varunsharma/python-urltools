@@ -71,6 +71,12 @@ to manipulate segments of a URL or create new URLs.
         ... 'foo', None))
         'http://example.com/abc?x=1#foo'
 
+* `compare` two urls to check if they are the same
+
+        >>> compare("http://examPLe.com:80/abc?x=&b=1",
+        ... "http://eXAmple.com/abc?b=1")
+        True
+
 * `encode` (IDNA, see RFC 3490)
 
         >>> urltools.encode("http://müller.de")

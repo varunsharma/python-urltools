@@ -12,10 +12,10 @@ except:
     from urllib import quote
 
 
-__version__ = '0.3.0'
+__version__ = '0.3.1'
 
 __all__ = ['URL', 'SplitResult', 'parse', 'extract', 'construct', 'normalize',
-           'normalize_host', 'normalize_path', 'normalize_query',
+           'compare', 'normalize_host', 'normalize_path', 'normalize_query',
            'normalize_fragment', 'encode', 'unquote', 'split', 'split_netloc',
            'split_host']
 
@@ -80,15 +80,17 @@ def normalize(url):
     >>> normalize('hTtp://ExAMPLe.COM:80')
     'http://example.com/'
     """
-    if url.strip() == '':
+    url = url.strip()
+    if url == '':
         return ''
-    parts = split(url.strip())
+    parts = split(url)
     if parts.scheme:
         netloc = parts.netloc
         if parts.scheme in SCHEMES:
             path = normalize_path(parts.path)
         else:
             path = parts.path
+    # url is relative, netloc (if present) is part of path
     else:
         netloc = parts.path
         path = ''
@@ -102,6 +104,15 @@ def normalize(url):
     fragment = normalize_fragment(parts.fragment)
     return construct(URL(parts.scheme, username, password, None, host, None,
                          port, path, query, fragment, None))
+
+
+def compare(url1, url2):
+    """Check if url1 and url2 are the same after normalizing both.
+
+    >>> compare("http://examPLe.com:80/abc?x=&b=1", "http://eXAmple.com/abc?b=1")
+    True
+    """
+    return normalize(url1) == normalize(url2)
 
 
 def _idna_encode(x):
@@ -223,7 +234,7 @@ def normalize_query(query):
 
 
 def normalize_fragment(fragment):
-    """Normalize fragment (unquote with exceptions only)"""
+    """Normalize fragment (unquote with exceptions only)."""
     return unquote(fragment, QUOTE_EXCEPTIONS['fragment'])
 
 
@@ -359,7 +370,7 @@ def split(url):
 
 
 def _clean_netloc(netloc):
-    """Remove trailing '.' and ':' and tolower
+    """Remove trailing '.' and ':' and tolower.
 
     >>> _clean_netloc('eXample.coM:')
     'example.com'

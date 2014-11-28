@@ -12,7 +12,7 @@ except:
     from urllib import quote
 
 
-__version__ = '0.3.1'
+__version__ = '0.3.2'
 
 __all__ = ['URL', 'SplitResult', 'parse', 'extract', 'construct', 'normalize',
            'compare', 'normalize_host', 'normalize_path', 'normalize_query',
@@ -148,30 +148,30 @@ def encode(url):
 
 def construct(parts):
     """Construct a new URL from parts."""
-    nurl = ''
+    url = ''
     if parts.scheme:
         if parts.scheme in SCHEMES:
-            nurl += parts.scheme + '://'
+            url += parts.scheme + '://'
         else:
-            nurl += parts.scheme + ':'
+            url += parts.scheme + ':'
     if parts.username and parts.password:
-        nurl += parts.username + ':' + parts.password + '@'
+        url += parts.username + ':' + parts.password + '@'
     elif parts.username:
-        nurl += parts.username + '@'
+        url += parts.username + '@'
     if parts.subdomain:
-        nurl += parts.subdomain + '.'
-    nurl += parts.domain
+        url += parts.subdomain + '.'
+    url += parts.domain
     if parts.tld:
-        nurl += '.' + parts.tld
+        url += '.' + parts.tld
     if parts.port:
-        nurl += ':' + parts.port
+        url += ':' + parts.port
     if parts.path:
-        nurl += parts.path
+        url += parts.path
     if parts.query:
-        nurl += '?' + parts.query
+        url += '?' + parts.query
     if parts.fragment:
-        nurl += '#' + parts.fragment
-    return nurl
+        url += '#' + parts.fragment
+    return url
 
 
 def _idna_decode(x):

@@ -44,6 +44,7 @@ def _get_public_suffix_list():
     return psl
 
 PSL = _get_public_suffix_list()
+assert len(PSL) > 0, 'Public Suffix List is empty!'
 
 
 SCHEMES = ['http', 'https', 'ftp', 'sftp', 'file', 'gopher', 'imap', 'mms',

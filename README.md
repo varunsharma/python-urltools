@@ -27,9 +27,9 @@ Rules that are applied to normalize a URL:
 * sort query params and remove params without value
 
 `normalize` uses the functions for splitting and normalization which are
-descriped below. The hostname is not tolowered `normalize_host`. It is already
+descriped below. The hostname is not tolowered by `normalize_host`. It is already
 done in the `split_host` step before to make splitting of malformed netlocs
-easy.
+easier.
 
 
 ### Parse

@@ -1,11 +1,5 @@
-urltools
+urltools [![version](https://pypip.in/v/urltools/badge.png?style=flat)](https://pypi.python.org/pypi/urltools) [![Supported Python versions](https://pypip.in/py_versions/urltools/badge.svg?style=flat)](https://pypi.python.org/pypi/urltools/) [![format](https://pypip.in/format/urltools/badge.png?style=flat)](https://pypi.python.org/pypi/urltools) [![downloads](https://pypip.in/d/urltools/badge.png?style=flat)](https://pypi.python.org/pypi/urltools) [![license](https://pypip.in/license/urltools/badge.png?style=flat)](https://pypi.python.org/pypi/urltools)
 ========
-
-[![version](https://pypip.in/v/urltools/badge.png?style=flat)](https://pypi.python.org/pypi/urltools)
-[![Supported Python versions](https://pypip.in/py_versions/urltools/badge.svg?style=flat)](https://pypi.python.org/pypi/urltools/)
-[![format](https://pypip.in/format/urltools/badge.png?style=flat)](https://pypi.python.org/pypi/urltools)
-[![downloads](https://pypip.in/d/urltools/badge.png?style=flat)](https://pypi.python.org/pypi/urltools)
-[![license](https://pypip.in/license/urltools/badge.png?style=flat)](https://pypi.python.org/pypi/urltools)
 
 Some functions to parse and normalize URLs.
 

@@ -239,8 +239,8 @@ def normalize_fragment(fragment):
     return unquote(fragment, QUOTE_EXCEPTIONS['fragment'])
 
 
-_hextochr = {'%02x' % i: chr(i) for i in range(256)}
-_hextochr.update({'%02X' % i: chr(i) for i in range(256)})
+_hextochr = dict(('%02x' % i, chr(i)) for i in range(256))
+_hextochr.update(dict(('%02X' % i, chr(i)) for i in range(256)))
 
 
 def unquote(text, exceptions=[]):

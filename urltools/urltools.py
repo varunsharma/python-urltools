@@ -2,6 +2,7 @@ import os
 import codecs
 from collections import namedtuple
 from posixpath import normpath
+import datetime
 
 try:
     from urllib.request import urlopen
@@ -22,6 +23,9 @@ __all__ = ['URL', 'SplitResult', 'parse', 'extract', 'construct', 'normalize',
 
 PSL_URL = 'https://publicsuffix.org/list/effective_tld_names.dat'
 
+def _download_public_suffix_list():
+    psl_raw = unicode(urlopen(PSL_URL).read(), 'utf-8')
+    return psl_raw
 
 def _get_public_suffix_list():
     """Return a set containing all Public Suffixes.
@@ -30,12 +34,28 @@ def _get_public_suffix_list():
     public suffix list it is downloaded into memory each time urltools is
     imported.
     """
-    local_psl = os.environ.get('PUBLIC_SUFFIX_LIST')
-    if local_psl:
-        with codecs.open(local_psl, 'r', 'utf-8') as f:
+    cache_psl = os.path.join(os.path.dirname(__file__), '.cached_tld_set')
+    env_psl = os.environ.get('PUBLIC_SUFFIX_LIST')
+
+    if os.path.isfile(cache_psl) and not env_psl:
+        with codecs.open(cache_psl, 'r', 'utf-8') as f:
+            psl_raw = f.readlines()
+        # extract the cached date and if older than 30 days redownload list.
+        cache_date = datetime.datetime.strptime(
+            psl_raw[0].replace('// cached: ', '').split('.')[0],
+            '%Y-%m-%d %H:%M:%S')
+        if datetime.datetime.today() > cache_date + datetime.timedelta(days=30):
+            _download_public_suffix_list()
+    elif env_psl:
+        with codecs.open(env_psl, 'r', 'utf-8') as f:
             psl_raw = f.readlines()
     else:
-        psl_raw = unicode(urlopen(PSL_URL).read(), 'utf-8').split('\n')
+        psl_raw = _download_public_suffix_list()
+        # Add the date to the cache file.
+        psl_raw = '// cached: {}\n'.format(datetime.datetime.today()) + psl_raw
+        with codecs.open(cache_psl, 'w', 'utf-8') as f:
+            f.write(psl_raw)
+        psl_raw = psl_raw.split('\n')
     psl = set()
     for line in psl_raw:
         item = line.strip()
@@ -45,7 +65,6 @@ def _get_public_suffix_list():
 
 PSL = _get_public_suffix_list()
 assert len(PSL) > 0, 'Public Suffix List is empty!'
-
 
 SCHEMES = ['http', 'https', 'ftp', 'sftp', 'file', 'gopher', 'imap', 'mms',
            'news', 'nntp', 'telnet', 'prospero', 'rsync', 'rtsp', 'rtspu',

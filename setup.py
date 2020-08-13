@@ -5,14 +5,14 @@ from setuptools import setup, find_packages
 from urltools import urltools
 
 setup(
-    name='urltools',
+    name='urltools2',
     version=urltools.__version__,
     description='Some functions to parse and normalize URLs.',
     long_description='Some functions to parse and normalize URLs.',
-    author='Roderick Baier',
-    author_email='roderick.baier@gmail.com',
+    author='Roderick Baier, Varun Sharma',
+    author_email='roderick.baier@gmail.com, varunsharmalive@gmail.com',
     license='MIT',
-    url='https://github.com/rbaier/python-urltools',
+    url='https://github.com/varunsharma/python-urltools',
     packages=find_packages(exclude=['tests']),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
